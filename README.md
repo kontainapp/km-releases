@@ -1,2 +1,2 @@
 # km-releases
-Public repo to host binary releases of Kontain monitor and payloads like Node unikernel
+Public repo to host binary releases of Kontain monitor and unikernel pre-built payloads
