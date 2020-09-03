@@ -1,6 +1,6 @@
 # Kontain Release
 
-Version: 0.9-Beta
+Version: 0.10-Beta
 Document Status: placeholder
 
 /* Copyright © 2020 Kontain Inc. All rights reserved. */
@@ -26,26 +26,40 @@ Kontain consists of library based unikernel and user-space Kontain Monitor provi
 
 In Containers universe, Kontain provides an OCI-compatible runtime for seamless integration (Note: some functionality may be missing on this Beta release).
 
+### Virtual Machine Prerequisites
+
+The linux kernel that Kontain runs on must have a Kontain supported virtual machine kernel module installed in order for Kontain to work. Currently `KVM` and Kontain proprietary `KKM` are supported by Kontain.
+
+The `KVM` module is available on most kernels. Some cloud service providers, AWS in particular, do not supported nested virtualization with `KVM`. For these cases, the Kontain proprietary `KKM` module is used. 
+
+For AWS, Kontain provides an pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled).
+
+Note:
+: We are working on install for KKM - it requires building with the exact kernel header version snd is being worked on for the release.
+
 ## Install
+Kontain releases are maintained on a public git repo https://github.com/kontainapp/km-releases, with README.md giving basic download and install instruction.
 
-Kontain releases are maintained on a public git repo https://github.com/kontainapp/km-releases, with README.md giving basic download and install instruction. These are binary-only releases, Kontain code is currently not open sourced and is maintained in the [private repo](https://github.com/kontainapp/km)
+Prerequisite(s):
+: git, wget, supported virtual machine kernel module (`KVM` or `KKM`)
 
-### Pre-requisites
+```
+$ git clone https://github.com/kontainapp/km-releases
+$ cd km-releases
+$ sudo mkdir -p /opt/kontain ; sudo chown root /opt/kontain
+$ ./kontain-install.sh
+```
 
-Kontain manipulates VMs and needs either `KVM module and /dev/kvm device`, or Kontain proprietary `KKM module and related /dev/kkm device`.
+Test the installation:
+```
+$ /opt/kontain/bin/km /opt/kontain/tests/hello_test.km Hello World
+Hello, world
+Hello, argv[0] = '/opt/kontain/tests/hello_test.km'
+Hello, argv[1] = 'Hello'
+Hello, argv[2] = 'World'
+```
 
-At this moment, either KVM should be available locally on or Azure/GCP instance with nested virtualization enabled, or you can use AWS Kontain-Ubuntu pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled).
-
-We are working on install for KKM - it requires building with the exact kernel header version snd is being worked on for the release.
-
-### Install on a machine with KVM enabled
-
-* Generally, we just validate prerequisites and place necessary files into /opt/kontain
-  * For now, we just un-tar the tarball
-  * We plan to provide native packaging (.rpm/.deb/apkbuild) at the release time
-* For the inpatient -  `wget -q -O - https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh | bash` - but please see the above link to km-releases for the latest.
-
-#### Validate
+#### Example Program
 
 Assuming you have gcc (and access to /dev/kvm) the easiest way to validate is to build a simple unikernel and run it:
 
