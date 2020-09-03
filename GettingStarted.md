@@ -35,7 +35,7 @@ The `KVM` module is available on most kernels. Some cloud service providers, AWS
 For AWS, Kontain provides an pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled).
 
 Note:
-: We are working on install for KKM - it requires building with the exact kernel header version snd is being worked on for the release.
+: We are working on install for KKM - it requires building with the exact kernel header version and is being worked on for the release.
 
 ## Install
 Kontain releases are maintained on a public git repo https://github.com/kontainapp/km-releases, with README.md giving basic download and install instruction.
