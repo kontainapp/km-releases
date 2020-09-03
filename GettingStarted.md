@@ -488,13 +488,31 @@ Sandboxing via syscall intercept
 Supported syscals and delegation to host
   relations to seccomp
 
-### Solution for no-nested-kvm
+### Solution for no-nested-virtualization machines
 
-KKM architecture (high level) goes here
+When nested virtualization is not available, Kontain provides a Kontain Kernel module (`kkm`) that implements a subset of KVM ioclts.  It doies not reuse KVM code or algorithms, because the requiements are much simpler - but it does implement a subset if `KVM ioctls` and uses the same control paradigm. It communicates via special device `/dev/kkm`.
 
-Amazon - pre-built AMIs to play with
+TODO: KKM architecture (high level) goes here
 
-OPEN: compile-on-install
+`kkm` requires to be built with the same kernel version and same kernel config as the running system. We are working on proper installation.
+TODO: doc on installation-with-build, when installation is ready
+
+#### Amazon - pre-built AMI
+
+Meanwhile, we provide an AWS image (Ubuntu 20 with pre-installed and pre-loaded KKM) whih can be used to experiment / test Kontain on AWS.
+
+AMI is placed in N. California (us-west-1) region. AMI ID is `ami-047e551d80c79dbb7`.
+
+To create a VM:
+
+```
+aws ec2 create-key-pair  --key-name aws-kkm --region us-west-1
+aws ec2 run-instances --image-id ami-047e551d80c79dbb7 --count 1 --instance-type t2.micro --region us-west-1 --key-name aws-kkm
+# before next step  save the key to ~/.ssh/aws-kkm.pem and chown it to 400
+```
+
+You can then ssh to the VM , install the latest Kontain per instructions above and run it.
+The only difference- please use `/dev/kkm` instead of `/dev/kvm`
 
 ### Kontainers
 
@@ -549,25 +567,22 @@ TODO: fix the link here after deciding where the yaml file will be.
 
 ## Cloud
 
-### Azure with nested KVM
+### Azure
+Azure supports nested virtualization for some types of instances since 2017: https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/.
+Kontain CI/CD process uses `Standard_D4s_v3` insance size.
 
-Azure supports nested virtualization for some types of instances since 2017: https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/
-Using one of these instances, install and try KOntain as described above.
-
-#### Azure Kubernetes
+Create one of these instances, SSH to it , then install and try Kontain as described above.
 
 Kontain runs it's own CI/CD pipeline on Azure Managed Kubernetes, and AWS for no-nested-virtualization code.
 
-**TODO** dev/user level docs
+### AWS
 
-### AWS (no-nested KVM)
+For AWS, Kontain can run on `*.metal` instances. For virtual instances, Kontain provides `kkm` kernel module and pre-build AMI with Ubuntu20.
+Unfortunately AWS does not support nested virtualization  on non-metal instanses, so a kernel modules is required.
 
+### Other clouds (vSphere, GCP, ...)
 
-
-### Other clouds
-
-summary of how to do go there
-
+Kontain will work on other clouds (e.g. vSphere or GCP) in a Linux VM with nested virtualization enabled
 
 
 ======= END OF THE DOC ====
