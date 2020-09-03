@@ -1,6 +1,6 @@
 # Kontain Release
 
-Version: 0.9-Beta
+Version: 0.10-Beta
 Document Status: placeholder
 
 /* Copyright © 2020 Kontain Inc. All rights reserved. */
@@ -26,26 +26,40 @@ Kontain consists of library based unikernel and user-space Kontain Monitor provi
 
 In Containers universe, Kontain provides an OCI-compatible runtime for seamless integration (Note: some functionality may be missing on this Beta release).
 
+### Virtual Machine Prerequisites
+
+The linux kernel that Kontain runs on must have a Kontain supported virtual machine kernel module installed in order for Kontain to work. Currently `KVM` and Kontain proprietary `KKM` are supported by Kontain.
+
+The `KVM` module is available on most kernels. Some cloud service providers, AWS in particular, do not supported nested virtualization with `KVM`. For these cases, the Kontain proprietary `KKM` module is used. 
+
+For AWS, Kontain provides an pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled).
+
+Note:
+: We are working on install for KKM - it requires building with the exact kernel header version snd is being worked on for the release.
+
 ## Install
+Kontain releases are maintained on a public git repo https://github.com/kontainapp/km-releases, with README.md giving basic download and install instruction.
 
-Kontain releases are maintained on a public git repo https://github.com/kontainapp/km-releases, with README.md giving basic download and install instruction. These are binary-only releases, Kontain code is currently not open sourced and is maintained in the [private repo](https://github.com/kontainapp/km)
+Prerequisite(s):
+: git, wget, supported virtual machine kernel module (`KVM` or `KKM`)
 
-### Pre-requisites
+```
+$ git clone https://github.com/kontainapp/km-releases
+$ cd km-releases
+$ sudo mkdir -p /opt/kontain ; sudo chown root /opt/kontain
+$ ./kontain-install.sh
+```
 
-Kontain manipulates VMs and needs either `KVM module and /dev/kvm device`, or Kontain proprietary `KKM module and related /dev/kkm device`.
+Test the installation:
+```
+$ /opt/kontain/bin/km /opt/kontain/tests/hello_test.km Hello World
+Hello, world
+Hello, argv[0] = '/opt/kontain/tests/hello_test.km'
+Hello, argv[1] = 'Hello'
+Hello, argv[2] = 'World'
+```
 
-At this moment, either KVM should be available locally on or Azure/GCP instance with nested virtualization enabled, or you can use AWS Kontain-Ubuntu pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled).
-
-We are working on install for KKM - it requires building with the exact kernel header version snd is being worked on for the release.
-
-### Install on a machine with KVM enabled
-
-* Generally, we just validate prerequisites and place necessary files into /opt/kontain
-  * For now, we just un-tar the tarball
-  * We plan to provide native packaging (.rpm/.deb/apkbuild) at the release time
-* For the inpatient -  `wget -q -O - https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh | bash` - but please see the above link to km-releases for the latest.
-
-#### Validate
+#### Example Program
 
 Assuming you have gcc (and access to /dev/kvm) the easiest way to validate is to build a simple unikernel and run it:
 
@@ -488,13 +502,31 @@ Sandboxing via syscall intercept
 Supported syscals and delegation to host
   relations to seccomp
 
-### Solution for no-nested-kvm
+### Solution for no-nested-virtualization machines
 
-KKM architecture (high level) goes here
+When nested virtualization is not available, Kontain provides a Kontain Kernel module (`kkm`) that implements a subset of KVM ioclts.  It doies not reuse KVM code or algorithms, because the requiements are much simpler - but it does implement a subset if `KVM ioctls` and uses the same control paradigm. It communicates via special device `/dev/kkm`.
 
-Amazon - pre-built AMIs to play with
+TODO: KKM architecture (high level) goes here
 
-OPEN: compile-on-install
+`kkm` requires to be built with the same kernel version and same kernel config as the running system. We are working on proper installation.
+TODO: doc on installation-with-build, when installation is ready
+
+#### Amazon - pre-built AMI
+
+Meanwhile, we provide an AWS image (Ubuntu 20 with pre-installed and pre-loaded KKM) whih can be used to experiment / test Kontain on AWS.
+
+AMI is placed in N. California (us-west-1) region. AMI ID is `ami-047e551d80c79dbb7`.
+
+To create a VM:
+
+```
+aws ec2 create-key-pair  --key-name aws-kkm --region us-west-1
+aws ec2 run-instances --image-id ami-047e551d80c79dbb7 --count 1 --instance-type t2.micro --region us-west-1 --key-name aws-kkm
+# before next step  save the key to ~/.ssh/aws-kkm.pem and chown it to 400
+```
+
+You can then ssh to the VM , install the latest Kontain per instructions above and run it.
+The only difference- please use `/dev/kkm` instead of `/dev/kvm`
 
 ### Kontainers
 
@@ -549,25 +581,22 @@ TODO: fix the link here after deciding where the yaml file will be.
 
 ## Cloud
 
-### Azure with nested KVM
+### Azure
+Azure supports nested virtualization for some types of instances since 2017: https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/.
+Kontain CI/CD process uses `Standard_D4s_v3` insance size.
 
-Azure supports nested virtualization for some types of instances since 2017: https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/
-Using one of these instances, install and try KOntain as described above.
-
-#### Azure Kubernetes
+Create one of these instances, SSH to it , then install and try Kontain as described above.
 
 Kontain runs it's own CI/CD pipeline on Azure Managed Kubernetes, and AWS for no-nested-virtualization code.
 
-**TODO** dev/user level docs
+### AWS
 
-### AWS (no-nested KVM)
+For AWS, Kontain can run on `*.metal` instances. For virtual instances, Kontain provides `kkm` kernel module and pre-build AMI with Ubuntu20.
+Unfortunately AWS does not support nested virtualization  on non-metal instanses, so a kernel modules is required.
 
+### Other clouds (vSphere, GCP, ...)
 
-
-### Other clouds
-
-summary of how to do go there
-
+Kontain will work on other clouds (e.g. vSphere or GCP) in a Linux VM with nested virtualization enabled
 
 
 ======= END OF THE DOC ====
