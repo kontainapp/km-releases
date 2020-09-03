@@ -3,7 +3,7 @@
 Public repo to host binary releases of Kontain monitor and unikernel pre-built payloads
 
 Not ready for consumption, work in progress.
-Documentation is included in the package in ./docs directory 
+Documentation is included in GettingStarted.md
 
 For now , to install 
 

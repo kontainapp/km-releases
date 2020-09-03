@@ -1,53 +1,79 @@
 # Kontain Release
 
-Version: 0.9-Beta
+Version: 0.10-Beta
 Document Status: placeholder
 
 /* Copyright © 2020 Kontain Inc. All rights reserved. */
 
 ## Introduction
 
-Kontain provides a way to run unmodified or relinked Linux executable as a unikernel in a dedicated VM  - with VM level isolation guarantees for security, and delivers very low overhead compare to regular linux processes. For example, payloads run under Kontain are immune to Meltdown security flaw even on un-patched kernels and CPUs.
+Kontain provides a mechanism to create a unikernel from an unmodified application code, and execute the unikernel it in a dedicated VM.
+Kontain provides VM level isolation guarantees for security with very low overhead compare to regular linux processes.
+For example, payloads run under Kontain are immune to Meltdown security flaw even on un-patched kernels and CPUs.
 
-While providing VM-level isolation, Kontain requires container-level (or less) overhead. In many cases Kontain can accelerate start time and smoother burst costs.
+Kontain consists of two components - Virtual Machine runtime, and tools to build unikernels.
+Together they provide VM-based sandboxing to run payloads.
 
-Kontain VM model dynamically adjusts to application requirement - e.g, automatic grow/shrink as application need more / less memory, or automatic vCPU add or remove as application manipulates thread pools.
+Kontain Monitor (KM) is a host user-space process providing a single VM to a single application.
+Kontain VM model dynamically adjusts to application requirements - e.g, automatically grow/shrink as application need more / less memory, or automatic vCPU add or remove as application manipulates thread pools.
 
-Kontain consists of library based unikernel and user-space Kontain Monitor providing application with VM model. Together they provide VM-based sandboxing to run payloads.
+Kontain does not require changes to the application source code in order to run the app as a unikernel.
+Any program can be converted to unkernel and run in a dedicated VM.
+If application issues fork/exec call, it is supported by spawning additional KM process to manage dedicated VMs.
 
-* Kontain Monitor (KM) is a host user-space process providing a single VM to a single application.
-  * If application issues fork/exec call, it is supported by spawning additional KM process to manage dedicated VMs.
-* A payload is run as a unikernel - i.e. directly on virtual hardware, without  additional software layer between the app the the virtual machine. The payload  may be the original executable, untouched (see below for more details) or original object files re-linked with Kontain libraries.
-  * Kontain does not require changes to the application source code in order to run the app as a unikernel.
-* Kontain VM is a specifically optimized VM Model. While allowing the executable to use full user space instruction set of the host CPU, it provides only the features necessary for the unikernel to execute.
-  * CPU lacks features normally available only with high privileges, such as MMU and virtual memory. VM presents linear address space and single low privilege level to the program running inside, plus a small high privilege landing pad for handing traps and signals.
-  * The VM does not have any virtual peripherals or even virtual buses either, instead it uses a small number of hypercalls to the KM to interact with the outside world.
-  * The provides neither BIOS nor support for bootstrap. Instead is has a facility to pre-initialize memory using the binary artifact before passing execution to it. It is similar to embedded CPU that has pre-initialized PROM chip with the executable code.
+* A payload is run as a unikernel - i.e. directly on virtual hardware,
+  without additional software layer between the app the the virtual machine
+* Kontain VM is a specifically optimized VM Model
+  While allowing the payload to use full user space instruction set of the host CPU,
+  it provides only the features necessary for the unikernel to execute
+  * CPU lacks features normally available only with high privileges, such as MMU and virtual memory.
+    VM presents linear address space and single low privilege level to the program running inside,
+    plus a small landing pad for handing traps and signals.
+  * The VM does not have any virtual peripherals or even virtual buses either,
+    instead it uses a small number of hypercalls to the KM to interact with the outside world
+  * The VM provides neither BIOS nor support for bootstrap.
+    Instead is has a facility to pre-initialize memory using the binary artifact before passing execution to it.
+    It is similar to embedded CPU that has pre-initialized PROM chip with the executable code
 
-In Containers universe, Kontain provides an OCI-compatible runtime for seamless integration (Note: some functionality may be missing on this Beta release).
+In Containers universe, Kontain provides an OCI-compatible runtime for seamless integration (Note: some functionality may be missing in this Beta release).
+
+### Virtual Machine Prerequisites
+
+The linux kernel that Kontain runs on must have a Kontain supported virtual machine kernel module installed in order for Kontain to work. Currently `KVM` and Kontain proprietary `KKM` are supported by Kontain.
+
+The `KVM` module is available on most kernels. Some cloud service providers, AWS in particular, do not supported nested virtualization with `KVM`. For these cases, the Kontain proprietary `KKM` module is used.
+
+For AWS, Kontain provides an pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled).
+
+Kontain manipulates VMs and needs either `KVM` module and `/dev/kvm` device, or Kontain proprietary `KKM` module and related `/dev/kkm` device.
 
 ## Install
-
-Kontain releases are maintained on a public git repo https://github.com/kontainapp/km-releases, with README.md giving basic download and install instruction. These are binary-only releases, Kontain code is currently not open sourced and is maintained in the [private repo](https://github.com/kontainapp/km)
-
-### Pre-requisites
-
-Kontain manipulates VMs and needs either `KVM module and /dev/kvm device`, or Kontain proprietary `KKM module and related /dev/kkm device`.
-
-At this moment, either KVM should be available locally on or Azure/GCP instance with nested virtualization enabled, or you can use AWS Kontain-Ubuntu pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled).
-
-We are working on install for KKM - it requires building with the exact kernel header version snd is being worked on for the release.
+Kontain releases are maintained on a public git repo https://github.com/kontainapp/km-releases, with README.md giving basic download and install instruction.
 
 ### Install on a machine with KVM enabled
 
-* Generally, we just validate prerequisites and place necessary files into /opt/kontain
-  * For now, we just un-tar the tarball
-  * We plan to provide native packaging (.rpm/.deb/apkbuild) at the release time
-* For the inpatient -  `wget -q -O - https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh | bash` - but please see the above link to km-releases for the latest.
+For the inpatient, `wget -q -O - https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh | bash`.
 
-#### Validate
+The script validates prerequisites and places necessary files into `/opt/kontain` directory,
+then tries to run "Hello, World!" unikernel.
 
-Assuming you have gcc (and access to /dev/kvm) the easiest way to validate is to build a simple unikernel and run it:
+Test the installation:
+
+```
+$ /opt/kontain/bin/km /opt/kontain/tests/hello_test.km Hello World
+Hello, world
+Hello, argv[0] = '/opt/kontain/tests/hello_test.km'
+Hello, argv[1] = 'Hello'
+Hello, argv[2] = 'World'
+```
+
+### Create and run your first unikernel
+
+Create an example program:
+
+#### Example Program
+
+Create playground directory and example program:
 
 ```C
 dir=$(mktemp -d)
@@ -73,14 +99,24 @@ int main(int argc, char* argv[])
    return 0;
 }
 EOF
+```
 
+Assuming you have gcc installed, compile and link the code into Kontain unikernel:
+
+```bash
 gcc -c -o $dir/$file.o $dir/$file.c
 /opt/kontain/bin/kontain-gcc -o $dir/$file.km $dir/$file.o
+```
+
+Assuming access to /dev/kvm or /dev/kkm run it the unikernel:
+
+```bash
 /opt/kontain/bin/km $dir/$file.km
 ```
 
 Note that `.km` is the ELF file with Kontain unikernel, and the last command was executed in Kontain VM.
-If you want to see the trace of KVM ioctl, you can enable cpu tracing: `/opt/kontain/bin/km -Vcpu $dir/$file.km`. To get help for KM command line, `/opt/kontain/bin/km --help`
+
+To get help for KM command line, `/opt/kontain/bin/km --help`
 
 ### Install for Docker
 
@@ -150,7 +186,8 @@ To build a Kontain unikernel, you can do one of the following
 * Link existing object files into a musl-libc based executable (like you would do for Alpine containers)
 * Link existing object files into a Kontain runtime-based executable
 
-We recommend statically linked executable (dynamic linking is supported but requires payload access to shared libraries , so we will leave it outside of this short into).
+We recommend statically linked executable (dynamic linking is supported but requires payload access to shared libraries,
+so we will leave it outside of this short intro).
 
 Kontain provides a convenience wrappers (`kontain-gcc` and `kontain-g++`) to simplify linking - these tools are just shell wrapper to provide all proper flags to gcc/g++/ld. You can use them as a replacement for gcc/g++ during a product build, or just for linking.
 
@@ -195,41 +232,47 @@ func main() {
 EOF
 
 go build -o $dir/$file.km $dir/$file.go
-/opt/kontain/bin/km $dir/$file.km
 
+/opt/kontain/bin/km $dir/$file.km
 ```
 
-### Using with existing executables
+For more optimal unikernel additional linker options:
 
-Kontain currently support running not-modified Linux executables as unikernels in Kontain VM, provided:
+```bash
+go build -ldflags '-T 0x201000 -extldflags "-no-pie -static -Wl,--gc-sections"' -o test.km test.go
+```
+
+### Using with standard executable
+
+Kontain supports running not-modified Linux executable as unikernel in Kontain VM, provided:
 
 * The executable does not use GLIBC (glibc is not supported yet).
   * So the executables could be one build for Alpine, or one not using libc (e.g. GOLANG)
-* The executable is not using some of the exotic/not supported syscalls (more details on this later, but apps like Java or Python or Node are good with this requirement)
 
-kontain-gcc has `-alpine` flag to build musl-based executable. E.e. using the examples/vars above, build it with `/opt/kontain/bin/kontain-gcc -alpine -o $dir/$file $dir/$file.o` and validate the results:
+Build the musl-based executable with kontain-gcc, using the examples/vars above:
 
-`$dir/$file` will run the result as regular linux binary and print out something like this:
-
-```sh
-Hello World from the following runtime environment:
-sysname         = Linux
-nodename        = msterin-p330
-release         = 5.7.16-200.fc32.x86_64
-version         = #1 SMP Wed Aug 19 16:58:53 UTC 2020
-machine         = x86_64
+```bash
+/opt/kontain/bin/kontain-gcc -alpine -o $dir/$file $dir/$file.o
 ```
 
-`/opt/kontain/bin/km $dir/$file` will run it as unikernel in Kontain VM and print out something like this:
+And validate the result running as unikernel in Kontain VM and print out something like this:
+
+```sh
+/opt/kontain/bin/km $dir/$file
+```
+
+The result:
 
 ```sh
 Hello World from the following runtime environment:
 sysname         = kontain-runtime
-nodename        = msterin-p330
+nodename        = node-p330
 release         = 4.1
 version         = preview
 machine         = kontain_VM
 ```
+
+## _What about the static .km files?_
 
 ### Using pre-build unikernels for interpreted languages
 
@@ -254,7 +297,8 @@ Please check * java
 
 ### Using snapshots
 
-Kontain supports snapshots and running from snapshots. A snapshot is an ELF file which can be run as directly as a unikernel in Kontain VM, but captures payload state-in time.
+To speedup startup time of an application with a long warm-up time Kontain provides a mechanism to create a "snapshot" unikernel that represents the state of the application.
+A snapshot is an ELF file which can be run as directly as a unikernel in Kontain VM, but captures payload state-in time.
 
 Snapshot can be triggered by an API called from the payload, or by an external `km_cli` running on host and communicating to Kontain Monitor (KM)
 
@@ -262,16 +306,14 @@ Limitations:
 
 * no coordination of multi-process payload snapshots
 
-
 TODO:
  * Doc and example
-
 
 ### Using with Kubernetes
 
 After installation of kontaind is completed (see above), you can use API server/kubectl to deploy Kontain-based pods to a Kubernetes cluster.
 A spec for the pod needs to request /dev/kvm device in the `resources` section, host volume mount,
-and entrypoint calling KM (unless symlinks are set up - see below).
+and _entrypoint calling KM (unless symlinks are set up - see below)._??? I'd say make this default.
 
 Example:
 
@@ -298,7 +340,8 @@ That also covers gdb-based GUI - e.g. Visual Studio Code `Debug`.
 
 ### Core dumps
 
-Payload running as a unikernel in Kontain V< will generate a coredump in the same cases it would have generated if running on Linux. The file name is `kmcore` (can be changed with `--coredump=file` flag). You can debug witha payload  coredump as a regular Linux coredump, e.g. `gdb program.km kmcore`
+Payload running as a unikernel in Kontain VM will generate a coredump in the same cases it would have generated if running on Linux. The file name is `kmcore` (can be changed with `--coredump=file` flag).
+You can analyse the payload coredump as a regular Linux coredump, e.g. `gdb program.km kmcore`
 
 ### Live debugging - command line
 
@@ -349,7 +392,10 @@ See VS Code launch.json docs for more info
 
 ## Symlinks
 
-If Kontain  Monitor (KM) is invoked via a symlink , it assumes the original file was side by side with the unikernel ELF and runs this elf.
+## _Do we need this? I was thinking we use this mechanism in faktory or prepared base images, but don't expect users to do it directly._
+
+If Kontain  Monitor (KM) is invoked via a symlink,
+it assumes the original file was side by side with the unikernel ELF and runs this elf.
 The name of the elf is the \<original_file_name>.km
 
 For example, if you have the following files in your directory:
@@ -362,7 +408,6 @@ python.km
 The running `./python` will result in running `/opt/kontain/bin/km ./python.km`. This allows to keep all oriinal scripts and shebang files using Kontain unmodified.
 
 **TODO**: example of Python virtenv and django using this
-
 
 ## Faktory
 
@@ -457,7 +502,9 @@ environment is not affected by kontain.
 
 To run a kontain based container image, the container will need access to
 `/dev/kvm` and kontain monitor `km`, so make sure the host has these
-avaliable. For Java we also requires kontain's version of `lic.so`.
+avaliable. For Java we also requires kontain's version of `libc.so`.
+
+## _Can we make this automatic?_
 
 ```bash
 docker run -it --rm \
@@ -488,19 +535,39 @@ Sandboxing via syscall intercept
 Supported syscals and delegation to host
   relations to seccomp
 
-### Solution for no-nested-kvm
+### Solution for no-nested-virtualization machines
 
-KKM architecture (high level) goes here
+When nested virtualization is not available, Kontain provides a Kontain Kernel module (`kkm`) that implements a subset of KVM ioclts.  It doies not reuse KVM code or algorithms, because the requiements are much simpler - but it does implement a subset if `KVM ioctls` and uses the same control paradigm. It communicates via special device `/dev/kkm`.
 
-Amazon - pre-built AMIs to play with
+TODO: KKM architecture (high level) goes here
 
-OPEN: compile-on-install
+`kkm` requires to be built with the same kernel version and same kernel config as the running system. We are working on proper installation.
+TODO: doc on installation-with-build, when installation is ready
+
+#### Amazon - pre-built AMI
+
+Meanwhile, we provide an AWS image (Ubuntu 20 with pre-installed and pre-loaded KKM) whih can be used to experiment / test Kontain on AWS.
+
+AMI is placed in N. California (us-west-1) region. AMI ID is `ami-047e551d80c79dbb7`.
+
+To create a VM:
+
+```
+aws ec2 create-key-pair  --key-name aws-kkm --region us-west-1
+aws ec2 run-instances --image-id ami-047e551d80c79dbb7 --count 1 --instance-type t2.micro --region us-west-1 --key-name aws-kkm
+# before next step  save the key to ~/.ssh/aws-kkm.pem and chown it to 400
+```
+
+You can then ssh to the VM , install the latest Kontain per instructions above and run it.
+The only difference- please use `/dev/kkm` instead of `/dev/kvm`
 
 ### Kontainers
 
 Regular runtime - mount, namespaces, using snapshots. Pluses and minuses
+
 krun - why and how to use
-*  OCI spec and use runtimes for bringing in existing kms. Update doc on how to use then and what needs to be in. Add an example
+
+* OCI spec and use runtimes for bringing in existing kms. Update doc on how to use then and what needs to be in. Add an example
 ```
   {
   "default-runtime": "runc",
@@ -522,7 +589,7 @@ kontaind serves both as an installer for kontain and a device manager for
 kvm/kkm devices on a k8s cluster. To use kontain monitor within containers in
 k8s, we need to first install kontain monitor onto the node to which we want
 to deploy kontainers. Then we need a device manager for `kvm` devices so k8s
-knows how to scheudle workloads onto the right node. For this, we developed
+knows how to schedule workloads onto the right node. For this, we developed
 kontaind, a device manager for `kvm` and `kkm` device, running as a daemonset
 on nodes that has these devices avaliable.
 
@@ -549,25 +616,42 @@ TODO: fix the link here after deciding where the yaml file will be.
 
 ## Cloud
 
-### Azure with nested KVM
+### Azure
+Azure supports nested virtualization for some types of instances since 2017: https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/.
+Kontain CI/CD process uses `Standard_D4s_v3` insance size.
 
-Azure supports nested virtualization for some types of instances since 2017: https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/
-Using one of these instances, install and try KOntain as described above.
-
-#### Azure Kubernetes
+Create one of these instances, SSH to it , then install and try Kontain as described above.
 
 Kontain runs it's own CI/CD pipeline on Azure Managed Kubernetes, and AWS for no-nested-virtualization code.
 
-**TODO** dev/user level docs
+### AWS
 
-### AWS (no-nested KVM)
+For AWS, Kontain can run on `*.metal` instances. For virtual instances, Kontain provides `kkm` kernel module and pre-build AMI with Ubuntu20.
+Unfortunately AWS does not support nested virtualization  on non-metal instanses, so a kernel modules is required.
+
+### Other clouds (vSphere, GCP, ...)
+
+Kontain will work on other clouds (e.g. vSphere or GCP) in a Linux VM with nested virtualization enabled
+
+## FAQ
+
+### Is it OSS?
+
+These are binary-only releases, Kontain code is currently not open sourced and is maintained in the [private repo](https://github.com/kontainapp/km)
 
 
+### How to install KKM
 
-### Other clouds
+We are working on install process for KKM - it requires building with the exact kernel header version and is being worked on for the release.
 
-summary of how to do go there
+### How to see Kontain interaction with KVM
 
+* You can use `trace-cmd record` and `trace-cmd report` to observe kvm activity. [For more details on trace-cmd see](https://www.linux-kvm.org/page/Tracing).
 
+### Are there any limitations on code running as unikernel
+
+* The code shouldn't use not supported system calls
+* VM monitor will report an error as "Unimplemented hypercall". Payload will abort
+* Apps like Java or Python or Node are good with this requirement
 
 ======= END OF THE DOC ====
