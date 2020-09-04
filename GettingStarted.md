@@ -18,7 +18,7 @@ Kontain Monitor (KM) is a host user-space process providing a single VM to a sin
 Kontain VM model dynamically adjusts to application requirements - e.g, automatically grow/shrink as application need more / less memory, or automatic vCPU add or remove as application manipulates thread pools.
 
 Kontain does not require changes to the application source code in order to run the app as a unikernel.
-Any program can be converted to unkernel and run in a dedicated VM.
+Any program can be converted to unikernel and run in a dedicated VM.
 If application issues fork/exec call, it is supported by spawning additional KM process to manage dedicated VMs.
 
 * A payload is run as a unikernel - i.e. directly on virtual hardware,
@@ -52,7 +52,7 @@ Kontain releases are maintained on a public git repo https://github.com/kontaina
 
 ### Install on a machine with KVM enabled
 
-For the inpatient, `wget -q -O - https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh | bash`.
+For the impatient, `wget -q -O - https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh | bash`.
 
 The script validates prerequisites and places necessary files into `/opt/kontain` directory,
 then tries to run "Hello, World!" unikernel.
@@ -288,7 +288,7 @@ We will extend the list by the release time. Also - see the section below on lin
 
 Example:  You can run a interactive python as inside Kontain VM using this:
 
-`docker run --device /dev/kvm -it --rm  -v /opt/kontain/bin/km:/opt/kontain/bin/km:z kontainapp/runenv-python`
+`docker run --device /dev/kvm -it --rm -v /opt/kontain/bin/km:/opt/kontain/bin/km:z kontainapp/runenv-python`
 
 **NOTE** Currently you may see debug messages there, and the container size is not optimized yet.
 
@@ -341,7 +341,7 @@ That also covers gdb-based GUI - e.g. Visual Studio Code `Debug`.
 ### Core dumps
 
 Payload running as a unikernel in Kontain VM will generate a coredump in the same cases it would have generated if running on Linux. The file name is `kmcore` (can be changed with `--coredump=file` flag).
-You can analyse the payload coredump as a regular Linux coredump, e.g. `gdb program.km kmcore`
+You can analyze the payload coredump as a regular Linux coredump, e.g. `gdb program.km kmcore`
 
 ### Live debugging - command line
 
@@ -394,7 +394,7 @@ See VS Code launch.json docs for more info
 
 ## _Do we need this? I was thinking we use this mechanism in faktory or prepared base images, but don't expect users to do it directly._
 
-If Kontain  Monitor (KM) is invoked via a symlink,
+If Kontain Monitor (KM) is invoked via a symlink,
 it assumes the original file was side by side with the unikernel ELF and runs this elf.
 The name of the elf is the \<original_file_name>.km
 
@@ -405,7 +405,7 @@ python -> opt/kontain/bin/km
 python.km
 ```
 
-The running `./python` will result in running `/opt/kontain/bin/km ./python.km`. This allows to keep all oriinal scripts and shebang files using Kontain unmodified.
+The running `./python` will result in running `/opt/kontain/bin/km ./python.km`. This allows to keep all original scripts and shebang files using Kontain unmodified.
 
 **TODO**: example of Python virtenv and django using this
 
@@ -452,7 +452,7 @@ sudo faktory convert \
 
 ### Use kontain Java in dockerfiles
 
-To use kontain java runtime environment with dockerfile, user can substitude
+To use kontain java runtime environment with dockerfile, user can substitute
 the base image with kontain image.
 ```dockerfile
 FROM kontainapp/runenv-jdk-11
@@ -502,7 +502,7 @@ environment is not affected by kontain.
 
 To run a kontain based container image, the container will need access to
 `/dev/kvm` and kontain monitor `km`, so make sure the host has these
-avaliable. For Java we also requires kontain's version of `libc.so`.
+available. For Java we also require kontain's version of `libc.so`.
 
 ## _Can we make this automatic?_
 
@@ -532,12 +532,12 @@ KM code components
 Supported syscalls - philosophy
 Sandboxing vi OUT/hcalls
 Sandboxing via syscall intercept
-Supported syscals and delegation to host
+Supported syscalls and delegation to host
   relations to seccomp
 
 ### Solution for no-nested-virtualization machines
 
-When nested virtualization is not available, Kontain provides a Kontain Kernel module (`kkm`) that implements a subset of KVM ioclts.  It doies not reuse KVM code or algorithms, because the requiements are much simpler - but it does implement a subset if `KVM ioctls` and uses the same control paradigm. It communicates via special device `/dev/kkm`.
+When nested virtualization is not available, Kontain provides a Kontain Kernel module (`kkm`) that implements a subset of KVM ioctls. It does not reuse KVM code or algorithms, because the requiements are much simpler - but it does implement a subset if `KVM ioctls` and uses the same control paradigm. It communicates via special device `/dev/kkm`.
 
 TODO: KKM architecture (high level) goes here
 
@@ -546,16 +546,16 @@ TODO: doc on installation-with-build, when installation is ready
 
 #### Amazon - pre-built AMI
 
-Meanwhile, we provide an AWS image (Ubuntu 20 with pre-installed and pre-loaded KKM) whih can be used to experiment / test Kontain on AWS.
+Meanwhile, we provide an AWS image (Ubuntu 20 with pre-installed and pre-loaded KKM) which can be used to experiment / test Kontain on AWS.
 
 AMI is placed in N. California (us-west-1) region. AMI ID is `ami-047e551d80c79dbb7`.
 
 To create a VM:
 
 ```
-aws ec2 create-key-pair  --key-name aws-kkm --region us-west-1
+aws ec2 create-key-pair --key-name aws-kkm --region us-west-1
 aws ec2 run-instances --image-id ami-047e551d80c79dbb7 --count 1 --instance-type t2.micro --region us-west-1 --key-name aws-kkm
-# before next step  save the key to ~/.ssh/aws-kkm.pem and chown it to 400
+# before next step save the key to ~/.ssh/aws-kkm.pem and chown it to 400
 ```
 
 You can then ssh to the VM , install the latest Kontain per instructions above and run it.
@@ -590,7 +590,7 @@ kvm/kkm devices on a k8s cluster. To use kontain monitor within containers in
 k8s, we need to first install kontain monitor onto the node to which we want
 to deploy kontainers. Then we need a device manager for `kvm` devices so k8s
 knows how to schedule workloads onto the right node. For this, we developed
-kontaind, a device manager for `/dev/kvm` or `/dev/kkm` device, running as a daemonset on nodes that has these devices avaliable.
+kontaind, a device manager for `/dev/kvm` or `/dev/kkm` device, running as a daemonset on nodes that has these devices available.
 
 To deploy the latest version of `kontaind`, run:
 
@@ -616,7 +616,7 @@ wget https://github.com/kontainapp/km-releases/blob/master/k8s/kontaind/deployme
 
 ### Azure
 Azure supports nested virtualization for some types of instances since 2017: https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/.
-Kontain CI/CD process uses `Standard_D4s_v3` insance size.
+Kontain CI/CD process uses `Standard_D4s_v3` instance size.
 
 Create one of these instances, SSH to it , then install and try Kontain as described above.
 
@@ -625,7 +625,7 @@ Kontain runs it's own CI/CD pipeline on Azure Managed Kubernetes, and AWS for no
 ### AWS
 
 For AWS, Kontain can run on `*.metal` instances. For virtual instances, Kontain provides `kkm` kernel module and pre-build AMI with Ubuntu20.
-Unfortunately AWS does not support nested virtualization  on non-metal instanses, so a kernel modules is required.
+Unfortunately AWS does not support nested virtualization  on non-metal instances, so a kernel modules is required.
 
 ### Other clouds (vSphere, GCP, ...)
 
