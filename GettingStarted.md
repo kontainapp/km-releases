@@ -615,12 +615,20 @@ wget https://github.com/kontainapp/km-releases/blob/master/k8s/kontaind/deployme
 ## Cloud
 
 ### Azure
-Azure supports nested virtualization for some types of instances since 2017: https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/.
+
+Azure supports nested virtualization for some instances size since 2017: https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/.
 Kontain CI/CD process uses `Standard_D4s_v3` instance size.
 
-Create one of these instances, SSH to it , then install and try Kontain as described above.
+Create one of these instances, ssh to it , then install and try Kontain as described above.  
 
-Kontain runs it's own CI/CD pipeline on Azure Managed Kubernetes, and AWS for no-nested-virtualization code.
+For example, assuming you have Azure CLI installed and you are logged in Azure (you may want to replace username/password and /or use ssh keys), this will create a correct VM
+
+```
+az group create --name myResourceGroup --location westus
+az vm create --resource-group myResourceGroup --name kontain-demo --image Canonical:UbuntuServer:18.04-LTS:latest --size Standard_D4s_v3 --admin-username kontain --admin-password KontainDemo1-now?
+```
+
+Note: Kontain runs it's own CI/CD pipeline on Azure Managed Kubernetes, and AWS for no-nested-virtualization code.
 
 ### AWS
 
