@@ -9,7 +9,7 @@
 
 [ "$TRACE" ] && set -x
 
-readonly TAG=${1:-0.1-test}
+readonly TAG=${1:-0.10-beta}
 readonly PREFIX="/opt/kontain"
 readonly URL="https://github.com/kontainapp/km-releases/releases/download/${TAG}/kontain.tar.gz"
 

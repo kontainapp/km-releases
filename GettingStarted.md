@@ -1,6 +1,6 @@
 # Kontain Release
 
-Version: 0.10-Beta
+Version: 0.10-beta
 Document Status: placeholder
 
 /* Copyright © 2020 Kontain Inc. All rights reserved. */
@@ -619,7 +619,7 @@ wget https://github.com/kontainapp/km-releases/blob/master/k8s/kontaind/deployme
 Azure supports nested virtualization for some instances size since 2017: https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/.
 Kontain CI/CD process uses `Standard_D4s_v3` instance size.
 
-Create one of these instances, ssh to it , then install and try Kontain as described above.  
+Create one of these instances, ssh to it , then install and try Kontain as described above.
 
 For example, assuming you have Azure CLI installed and you are logged in Azure (you may want to replace username/password and /or use ssh keys), this will create a correct VM
 
