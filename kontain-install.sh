@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 #  Copyright © 2018-2020 Kontain Inc. All rights reserved.
 #
@@ -6,8 +6,7 @@
 #
 # Usage: ./kontain-install.sh [TAG]
 
-
-[ "$TRACE" ] && set -x
+set -e ; [ "${TRACE}" ] && set -x
 
 readonly TAG=${1:-0.10-beta}
 readonly PREFIX="/opt/kontain"
