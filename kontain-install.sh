@@ -6,7 +6,7 @@
 #
 # Usage: ./kontain-install.sh [TAG]
 
-set -e ; [ "${TRACE}" ] && set -x
+set -e ; [ "$TRACE" ] && set -x
 
 readonly TAG=${1:-0.10-beta}
 readonly PREFIX="/opt/kontain"
