@@ -278,22 +278,19 @@ machine         = kontain_VM
 
 Kontain supports a set of pre-built language systems, as containers you can use in FROM dockerfiles statement, or passing scripts dirs as volumes.
 
-The images are available on dockerhub as `kontainapp/runenv-<language>` e.g. `kontainapp/runenv-python`. Kontain provides the following prebuilt languages:
+The images are available on dockerhub as `kontainapp/runenv-<language>-version` e.g. `kontainapp/runenv-python-3.7`. Kontain provides the following pre-built languages:
 
 * jdk-11.0.8
-* node (Java script)
-* python (3.6)
+* node-12.4 (js)
+* python-3.7
 
 We will extend the list by the release time. Also - see the section below on linking your own, if needed
 
 Example:  You can run a interactive python as inside Kontain VM using this:
 
-`docker run --device /dev/kvm -it --rm -v /opt/kontain/bin/km:/opt/kontain/bin/km:z kontainapp/runenv-python`
+`docker run --device /dev/kvm -it --rm -v /opt/kontain/bin/km:/opt/kontain/bin/km:z kontainapp/runenv-python-3.7`
 
 **NOTE** Currently you may see debug messages there, and the container size is not optimized yet.
-
-Please check * java
-* node.js
 
 ### Using snapshots
 
