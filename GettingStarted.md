@@ -1,9 +1,11 @@
 # Kontain Release
 
 Version: 0.10-beta
-Document Status: placeholder
+Document Status: WORK IN PROGRESS
 
-/* Copyright © 2020 Kontain Inc. All rights reserved. */
+**Copyright © 2020 Kontain Inc. All rights reserved.**
+
+**By downloading or otherwise accessing the Kontain Beta Materials, you hereby agree to all of the terms and conditions of Kontain’s Beta License available at https://raw.githubusercontent.com/kontainapp/km-releases/master/LICENSE**
 
 ## Introduction
 
