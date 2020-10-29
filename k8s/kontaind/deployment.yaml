@@ -33,7 +33,7 @@ spec:
               mountPath: /var/lib/kubelet/device-plugins
       initContainers:
         - name: kontain-installer
-          image: docker.io/kontainapp/kontain-installer:latest
+          image: docker.io/kontainapp/runenv-kontain-installer:latest
           imagePullPolicy: Always
           securityContext:
             privileged: true
