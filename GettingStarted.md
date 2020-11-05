@@ -23,7 +23,7 @@ Kontain does not require changes to the application source code in order to run 
 Any program can be converted to unikernel and run in a dedicated VM.
 If application issues fork/exec call, it is supported by spawning additional KM process to manage dedicated VMs.
 
-* A payload is run as a unikernel - i.e. directly on virtual hardware,
+* A payload is run as a unikernel in a dedicated VM - i.e. directly on virtual hardware,
   without additional software layer between the app the the virtual machine
 * Kontain VM is a specifically optimized VM Model
   While allowing the payload to use full user space instruction set of the host CPU,
@@ -41,18 +41,23 @@ In Containers universe, Kontain provides an OCI-compatible runtime for seamless 
 
 ### Virtual Machine Prerequisites
 
-The linux kernel that Kontain runs on must have a Kontain supported virtual machine kernel module installed in order for Kontain to work. Currently `KVM` and Kontain proprietary `KKM` are supported by Kontain.
+The Linux kernel that Kontain runs on must have a Kontain supported virtual machine kernel module installed in order for Kontain to work. Currently regular Linux `KVM` module and Kontain proprietary `KKM` module are supported by Kontain.
 
-The `KVM` module is available on most kernels. Some cloud service providers, AWS in particular, do not supported nested virtualization with `KVM`. For these cases, the Kontain proprietary `KKM` module is used.
+The `KVM` module is available on most Linux kernels. Kontain requies Linux Kernel 5.x to properly function due to some changes and improvements in 5.x KVM Module.
 
-For AWS, Kontain provides an pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled).
+Some cloud service providers, AWS in particular, do not supported nested virtualization with `KVM`. For these cases, the Kontain proprietary `KKM` module is used.
 
-Kontain manipulates VMs and needs either `KVM` module and `/dev/kvm` device, or Kontain proprietary `KKM` module and related `/dev/kkm` device.
+To make it easie to try Kontain on AWS, Kontain provides a pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled). See below in `Amazon - pre-built AMI` section
+
+Kontain manipulates VMs and needs acess to either `/dev/kvm` device, or `/dev/kkm` device , depending on the kernel module used.
 
 ## Install
+
 Kontain releases are maintained on a public git repo https://github.com/kontainapp/km-releases, with README.md giving basic download and install instruction.
 
 ### Install on a machine with KVM enabled
+
+Assuming the Linux kernel is 5.0 and above (check `uname -a`), and kvm module is loaded (check `lsmod | grep kvm`) and thus `/dev/kvm` file exist,  you can install and use Kontain support for building and running unikernels.
 
 For the impatient, `wget -q -O - https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh | bash`.
 
@@ -61,7 +66,7 @@ then tries to run "Hello, World!" unikernel.
 
 Test the installation:
 
-```
+```bash
 $ /opt/kontain/bin/km /opt/kontain/tests/hello_test.km Hello World
 Hello, world
 Hello, argv[0] = '/opt/kontain/tests/hello_test.km'
@@ -501,9 +506,7 @@ environment is not affected by kontain.
 
 To run a kontain based container image, the container will need access to
 `/dev/kvm` and kontain monitor `km`, so make sure the host has these
-available. For Java we also require kontain's version of `libc.so`.
-
-## _Can we make this automatic?_
+available. For Java we also require kontain's version of `libc.so`. E.g.
 
 ```bash
 docker run -it --rm \
@@ -513,6 +516,8 @@ docker run -it --rm \
     example/kontain-java
 ```
 
+Note: we are working on OCI Runtime that will automate the above. This document will be updated once it's available
+
 ## Architecture
 
 TODO
@@ -521,7 +526,8 @@ TODO
 
 TODO. Outline:
 
-Link to google doc if we have something.
+Link to google architecture doc (need to make it public after review https://docs.google.com/document/d/1UckXwTfVgcJ5g4hvz20yJf51bDkTJs4YIwuRzFjxrXQ/edit#heading=h.z80ov6pz80hk)
+
 System design diagram
 Hardware model - threads, memory, IO
 Virtualization levels (in-KM, outside of KM)
@@ -561,6 +567,8 @@ You can then ssh to the VM , install the latest Kontain per instructions above a
 The only difference- please use `/dev/kkm` instead of `/dev/kvm`
 
 ### Kontainers
+
+Content TODO. Below is an outline. This is mainly explanation/intro, no specific steps.
 
 Regular runtime - mount, namespaces, using snapshots. Pluses and minuses
 
@@ -604,12 +612,15 @@ Alternatively, you can download the yaml and make your own modification:
 wget https://github.com/kontainapp/km-releases/blob/master/k8s/kontaind/deployment.yaml?raw=true -O kontaind.yaml
 ```
 
+## Dev guide
 
-## dev guide
+Kontain unikernel can be created by replacing 'gcc' (or g++) on the final link phase of C/C++ program with /opt/kontain/bin/kontain-gcc (or g++).
+Kontain Monitor (KM) can also run some unmodified Linux binaries as unikernels
 
-* Tools to build simple unikernels with kontain-gcc
+TODO: details
+
 * Example of building complex unikernels (e.g python)
-* Running alpine exec as-is in a unikernel
+* Running alpine (musl-based) or regular (glibc) based executable as-is as a unikernel
 
 ## Cloud
 
@@ -622,7 +633,7 @@ Create one of these instances, ssh to it , then install and try Kontain as descr
 
 For example, assuming you have Azure CLI installed and you are logged in Azure (you may want to replace username/password and /or use ssh keys), this will create a correct VM
 
-```
+```bash
 az group create --name myResourceGroup --location westus
 az vm create --resource-group myResourceGroup --name kontain-demo --image Canonical:UbuntuServer:18.04-LTS:latest --size Standard_D4s_v3 --admin-username kontain --admin-password KontainDemo1-now?
 ```
@@ -632,11 +643,18 @@ Note: Kontain runs it's own CI/CD pipeline on Azure Managed Kubernetes, and AWS 
 ### AWS
 
 For AWS, Kontain can run on `*.metal` instances. For virtual instances, Kontain provides `kkm` kernel module and pre-build AMI with Ubuntu20.
-Unfortunately AWS does not support nested virtualization  on non-metal instances, so a kernel modules is required.
+Unfortunately AWS does not support nested virtualization  on non-metal instances, so a kernel modules is required. AMI info and example of AWS commands are documented earlier in this paper.
 
-### Other clouds (vSphere, GCP, ...)
+### Google Cloud Platform
 
-Kontain will work on other clouds (e.g. vSphere or GCP) in a Linux VM with nested virtualization enabled
+For GCP, nested virtualization support and configuraration are described here: https://docs.google.com/document/d/1UckXwTfVgcJ5g4hvz20yJf51bDkTJs4YIwuRzFjxrXQ/edit#heading=h.z80ov6pz80hk.
+
+Also, default Linux distro GCP creates is an older Debian with 4.9 Kernel. Kontain requires version 5.x.
+Please choose either Ubuntu 18 or Ububtu 20, or Debian 10 when creating a VM
+
+### Other clouds
+
+Kontain works on other clouds  in a Linux VM with (1) nested virtualization enabled (2) Linux kernel 5.x
 
 ## FAQ
 
