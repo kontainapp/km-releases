@@ -1,7 +1,10 @@
 # Kontain Monitor, Kontain VM and unikernels
 
-\[All terminology and content is subject to change without notice.]
-\[ Copyright © 2020 Kontain Inc. All rights reserved. ]
+*All terminology and content is subject to change without notice*
+
+**Copyright © 2020 Kontain Inc. All rights reserved.**
+
+**By downloading or otherwise accessing the Kontain Beta Materials, you hereby agree to all of the terms and conditions of Kontain’s Beta License available at https://raw.githubusercontent.com/kontainapp/km-releases/master/LICENSE**
 
 Public repository to host Kontain binary releases. Kontain release includes Kontain Monitor, runtime libraries, tools and pre-build unikernel payloads, e.g. Python-3.7
 
@@ -11,12 +14,13 @@ Kontain seamlessly plugs into Docker or Kubernetes run time environments
 
 ## Status
 
-THIS PACKAGING AND DOCS ARE WORK IN PROGRESS AND NOT READY FOR INDEPENDENT CONSUMPTION.
+THIS PACKAGING AND DOCS ARE WORK IN PROGRESS AND MAY CHANGE WITHOUT NOTICE.
 The actual code is at Beta.
 
 * Only works on machine with KVM enabled, or with Kontain Kernel Module (KKM) installed and loaded.
-* For demo purposes, we provide an AWS AMI of Ubuntu 20 with KKM installed and pre-loaded.
+* Only supports Linux Kernel 5.x. Note than Debian 9 (default in GCP at the moment) is based on 4.9 Kernel, so you'd need to choose other distro with fresher kernel, e.g. Ububtu 20 LTS. 
 * For Linux used as a host, we recommend Fedora32 or Ubuntu 20.
+* For demo purposes, we provide an AWS AMI of Ubuntu 20 with KKM installed and pre-loaded.
 
 ## Install for impatient
 
