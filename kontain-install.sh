@@ -13,7 +13,8 @@ readonly PREFIX="/opt/kontain"
 readonly URL="https://github.com/kontainapp/km-releases/releases/download/${TAG}/kontain.tar.gz"
 
 function check_args {
-   echo "check-arg: Noop for now"
+   # "check-arg: Noop for now"
+   true
 }
 
 function warning {
@@ -27,6 +28,10 @@ function error {
 
 validate=0
 function check_prereqs {
+   if [ $(uname) != Linux ] ; then
+      error "Kontain requires a Linux distribution, e.g. Ubuntu 20 or Fedora 32. Current plaform: $(uname)"
+   fi
+
    # check for PREFIX
    if [[ ! -d $PREFIX || ! -w $PREFIX ]] ; then
       error "$PREFIX does not exist or not writeable. Use 'sudo mkdir -p $PREFIX ; sudo chown `whoami` $PREFIX'"
