@@ -1,26 +1,28 @@
 # Kontain Monitor, Kontain VM and unikernels
 
-Public repository to host Kontain binary releases. Kontain release includes Kontain Monitor, runtime libraries, tools and pre-build unikernel payloads, e.g. Python-3.7.
+Public repository with Kontain binary releases. Kontain code is not open source currently and is maintained in a private repository. 
 
-Kontain is the way to run container workloads "Secure, Fast and Small - choose three". Kontain runs workloads (which can be a regular Linux executable) as a unikernel within Kontain VM, with Virtual Machine level isolation/security, but without any of VM overhead - in act, Kontain workloads startup time is closer to Linux process and is faster than Docker containers.
+Kontain is the way to run container workloads "Secure, Fast and Small - choose three". Kontain runs workloads in a dedicated VM, as a unikernel - within Kontain VM. A workload can be a regular Linux executable, or a Kontain "Unikernel" - your code relinked with Kontain libraries to run directly on virtual hardware, without OS layer in the VM. Running in a Kontain Virtual Machine provides VM level isolation/security, but without any of VM overhead - in act, Kontain workloads startup time is closer to Linux process and is faster than Docker containers.
 
 Kontain seamlessly plugs into Docker or Kubernetes run time environments.
+
+Kontain release includes Kontain Monitor, runtime libraries, tools and pre-build unikernel payloads, e.g. Python-3.7.
 
 ## Status
 
 BETA - the packaging and docs are work in progress and may change without notice. 
 
-## Prerequisites
+## Platform support
 
-* Linux distrution with kernel 5.0.
+* Kontain currently supports and is tested on Linux distrution with kernel 4.15 and above
   * We recommend Fedora 32 or Ubuntu 20.
-  * Note than Debian 9 (default in GCP at the moment) is based on 4.9 Kernel, so you'd need to choose other distro with fresher kernel, e.g. Ububtu 20 LTS. 
-* Only works on machine with KVM enabled, or with Kontain Kernel Module (KKM) installed and loaded.
+  * Note than Debian 9 (default in GCP at the moment) is based on 4.09 Kernel, so you'd need to choose other distro with fresher kernel, e.g. Ububtu 20 LTS. 
+* Kontain needs access to virtualization, so it works on Linux with KVM enabled, or Linux with Kontain Kernel Module (KKM) installed and loaded.
   * On AWS, Kontain KKM kernel model is required. For demo purposes, we provide an AWS AMI of Ubuntu 20 with KKM installed and pre-loaded.
 
 ## Install
 
-On a machine with KVM enabled, run this
+On a Linux machine with KVM enabled, run this
 
 ```bash
 wget https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh -O - -q | bash
