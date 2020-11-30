@@ -81,25 +81,46 @@ You can run Kontain payload wrapped in a native Docker container.... in this cas
 **** KRUN is not in the bundle yet, skip this section ****
 
 Or you can use Kontain `krun` runtime from docker/podman or directly. `krun` is installed together with KM and other components.
-`krun` is forked from Redhat's `crun` runtime, and can be invoked as `krun` or as `crun --kontain`
+`krun` is forked from Redhat's `crun` runtime github project, and can be invoked as `krun`.
+One of many introductions to runtimes can be found here:
+https://medium.com/@avijitsarkar123/docker-and-oci-runtimes-a9c23a5646d6
 
-Configuring `krun`: Documentation here is TBD
+Configuring `krun`:
 
-* Runtimes config
-*  OCI spec and use runtimes for bringing in existing kms. Update doc on how to use then and what needs to be in. Add an example
+* Runtimes config for docker
 
-```
+Edit /etc/docker/daemon.json using sudo to run your editor and add the following:
+
+```txt
   {
-  "default-runtime": "runc",
-  "runtimes": {
-    "crun": {
-      "path": "/opt/kontain/bin/crun",
-      "runtimeArgs": [
-              "--kontain"
-      ]
+    "default-runtime": "runc",
+    "runtimes": {
+      "krun": {
+        "path": "/opt/kontain/bin/krun",
+      },
+      "crun": {
+        "path": "/opt/kontain/bin/crun",
+      }
     }
   }
-  ```
+```
+
+Then restart docker for the change to take effect:
+```bash
+systemctl reload-or-restart docker.service
+```
+
+Then you run a container using krun as follows:
+
+```bash
+docker pull kontainapp/runenv-python
+docker run --runtime krun kontainapp/runenv-python -c "import os; print(os.uname())"
+```
+
+You should see output that looks like this:
+```txt
+posix.uname_result(sysname='kontain-runtime', nodename='ddef05d46147', release='4.1', version='preview', machine='kontain_KVM')
+```
 
 #### Validate
 
@@ -117,7 +138,7 @@ EOF
 docker run --rm -v /opt/kontain/bin/km:/opt/kontain/bin/km:z --device /dev/kvm kontain-hello
 ```
 
-To validate with `krun` (when we add `krun` to the bundle) `docker run --rm --runtime=kontain kontain-hello`
+To validate with `krun` (when we add `krun` to the bundle) `docker run --rm --runtime=krun kontain-hello`
 
 ### Kubernetes
 
@@ -622,6 +643,7 @@ The only difference- please use `/dev/kkm` instead of `/dev/kvm`
 
 ### Kontainers
 
+???? Do we need this section????
 Content TODO. Below is an outline. This is mainly explanation/intro, no specific steps.
 
 Regular runtime - mount, namespaces, using snapshots. Pluses and minuses
