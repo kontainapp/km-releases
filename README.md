@@ -641,29 +641,6 @@ aws ec2 run-instances --image-id ami-047e551d80c79dbb7 --count 1 --instance-type
 You can then ssh to the VM , install the latest Kontain per instructions above and run it.
 The only difference- please use `/dev/kkm` instead of `/dev/kvm`
 
-### Kontainers
-
-???? Do we need this section????
-Content TODO. Below is an outline. This is mainly explanation/intro, no specific steps.
-
-Regular runtime - mount, namespaces, using snapshots. Pluses and minuses
-
-krun - why and how to use
-
-* OCI spec and use runtimes for bringing in existing kms. Update doc on how to use then and what needs to be in. Add an example
-```
-  {
-  "default-runtime": "runc",
-  "runtimes": {
-    "crun": {
-      "path": "/usr/local/bin/crun",
-      "runtimeArgs": [
-              "--kontain"
-      ]
-    }
-  }
-  ```
-
 ### Kubernetes
 
 #### kontaind
