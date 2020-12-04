@@ -33,36 +33,51 @@ The packaging and docs are work in progress and may change without notice. Refer
 * Kontain currently supports and is tested on Linux distribution with kernel 4.15 and above
   * We recommend Fedora 32 or Ubuntu 20.
   * Note than Debian 9 (default in GCP at the moment) is based on 4.09 Kernel, so you'd need to choose other distributions with fresher kernel, e.g. Ubuntu 20 LTS.
+  * Earlier distributions (e.g. Ubuntu 18 LTS) are not fully supported, mainly due to limited testing. if you need one of these please try first, and if there are issues please submit an issue for this repository.
 * Kontain needs access to virtualization, so it works on Linux with KVM enabled, or Linux with Kontain Kernel Module (KKM) installed and loaded.
   * On AWS, Kontain KKM kernel model is required. For demo purposes, we provide an AWS AMI of Ubuntu 20 with KKM installed and pre-loaded.
 
 ## Install
 
-On a Linux machine with KVM enabled, run this
+### Check Pre-requisites
+
+Currently only `Linux` is supported. Kernel 5.0 and above is recommended. Kernel 4.15+ is OK, prior kernels are not supported
+If you want to give it a try on OSX or vSphere or Windows, please create a Linux VM with nested
+vitualization (/dev/kvm) available - e.g. VMWare Fusion on Mac supports it out of the box.
+
+* To check Linux kernel version, use `uname -a`.
+* To check that KVM is and kvm module is loaded use `lsmod | grep kvm` ; also validate that /dev/kvm exists `ls -l /dev/kvm`.
+
+
+### Install Kontain files
+
+Then, use one of the following methods:
+#### Use wget directly
+
+Make sure *wget is installed* and install it if needed (Fedora: `sudo dnf install wget`. Ubuntu: `sudo apt-get install wget`) , and then run these commands:
 
 ```bash
 sudo mkdir -p /opt/kontain ; sudo chown $(whoami) /opt/kontain
 wget https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh -O - -q | bash
 ```
 
-Or, you can clone the repository and run the script directly:
+#### Use git
+
+Alternatively, you can clone the repository and run the script directly. Note that `wget` is still needed by this script to pull the actual bundle:
 
 ```bash
+sudo mkdir -p /opt/kontain ; sudo chown $(whoami) /opt/kontain
 git clone https://github.com/kontainapp/km-releases
 ./km-releases/kontain-install.sh
 ```
 
 Either way, the script will try to un-tar the content into /opt/kontain. If you don't have enough access, the script will advice on the next step.
 
-### Install on a machine with KVM enabled
+### Validate the installation
 
-Assuming the Linux kernel is 5.0 and above (check `uname -a`), and kvm module is loaded (check `lsmod | grep kvm`) and thus `/dev/kvm` file exist,  you can install and use Kontain support for building and running unikernels.
+The install script will validates prerequisites and places necessary files into the `/opt/kontain` directory, then try to run "Hello, World!" unikernel.
 
-For the impatient, `wget -q -O - https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh | bash`.
-
-The script validates prerequisites and places necessary files into the `/opt/kontain` directory, then tries to run "Hello, World!" unikernel.
-
-Test the installation:
+You can also test the installation manually:
 
 ```bash
 $ /opt/kontain/bin/km /opt/kontain/tests/hello_test.km Hello World
