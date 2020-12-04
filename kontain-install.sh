@@ -11,7 +11,6 @@ set -e ; [ "$TRACE" ] && set -x
 readonly TAG=${1:-0.10-beta}
 readonly PREFIX="/opt/kontain"
 readonly URL="https://github.com/kontainapp/km-releases/releases/download/${TAG}/kontain.tar.gz"
-readonly NEEDED_PACKAGES="yajl libseccomp libcap glibc"
 
 function check_args {
    # "check-arg: Noop for now"
@@ -36,6 +35,19 @@ function check_packages {
             warning "Package $i is required and is not installed."
         fi
     done
+}
+
+function install_packages {
+    source /etc/os-release
+    echo "Installing needed packages for $NAME"
+    if [ "$NAME" == "Ubuntu" ]; then
+        sudo apt-get update
+        sudo apt-get install -y libyajl2 libseccomp2 libcap2
+    elif [ "$NAME" == "Fedora" ] ; then
+        sudo dnf install yajl-devel.x86_64 libseccomp.x86_64 libcap.x86_64
+    else
+        echo "Unsupported linux: $NAME, packages libyajl, libseccomp, libcap may need to be installed"
+    fi
 }
 
 validate=0
@@ -91,5 +103,5 @@ function get_bundle {
 # main
 check_args
 check_prereqs
-check_packages
+install_packages
 get_bundle
