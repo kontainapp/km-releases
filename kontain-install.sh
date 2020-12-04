@@ -43,17 +43,16 @@ function check_prereqs {
 
    # check and warn about kvm and version
    if ! lsmod | grep -q kvm ; then
-      warning "KVM module is missing"
       if ! lsmod | grep -q kkm ; then
-         warning "KKM module is also missing"
+         warning "No virtualization module (KKM or KVM) is found"
          validate=0
       elif [ ! -w /dev/kkm  ] ; then
-         warning "/dev/kkm is missing or not writeable"
+         warning "KKM module is present but /dev/kkm is missing or not writeable"
       else
          validate=1
       fi
    elif [ ! -w /dev/kvm  ] ; then
-      warning "/dev/kvm is missing or not writeable"
+      warning "KVM module is present but /dev/kvm is missing or not writeable"
    else
       validate=1
    fi
