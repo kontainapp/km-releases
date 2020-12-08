@@ -93,12 +93,23 @@ You can run Kontain payload wrapped in a native Docker container.... in this cas
 
 #### Kontain OCI runtime (krun)
 
-**** KRUN is not in the bundle yet, skip this section ****
-
 Or you can use Kontain `krun` runtime from docker/podman or directly. `krun` is installed together with KM and other components.
 `krun` is forked from Redhat's `crun` runtime github project, and can be invoked as `krun`.
 One of many introductions to runtimes can be found here:
 https://medium.com/@avijitsarkar123/docker-and-oci-runtimes-a9c23a5646d6
+
+* krun package requirements
+
+krun needs some packages which may not be on your system, install them as follows if they are not already present on your system:
+
+For fedora:
+
+sudo dnf install yajl-devel.x86_64 libseccomp.x86_64 libcap.x86_64
+
+For ubuntu:
+
+sudo apt-get update
+sudo apt-get install -y libyajl2 libseccomp2 libcap2
 
 Configuring `krun`:
 
@@ -111,10 +122,10 @@ Edit /etc/docker/daemon.json using sudo to run your editor and add the following
     "default-runtime": "runc",
     "runtimes": {
       "krun": {
-        "path": "/opt/kontain/bin/krun",
+        "path": "/opt/kontain/bin/krun"
       },
       "crun": {
-        "path": "/opt/kontain/bin/crun",
+        "path": "/opt/kontain/bin/crun"
       }
     }
   }

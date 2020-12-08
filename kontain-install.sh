@@ -26,6 +26,30 @@ function error {
    exit 1
 }
 
+pkgs_missing=0
+function check_packages {
+    echo "Checking that packages $NEEDED_PACKAGES are present"
+    for i in $NEEDED_PACKAGES ; do
+        if ! rpm -qa | grep $i -q ; then
+            pkgs_missing=1
+            warning "Package $i is required and is not installed."
+        fi
+    done
+}
+
+function install_packages {
+    source /etc/os-release
+    echo "Installing needed packages for $NAME"
+    if [ "$NAME" == "Ubuntu" ]; then
+        sudo apt-get update
+        sudo apt-get install -y libyajl2 libseccomp2 libcap2
+    elif [ "$NAME" == "Fedora" ] ; then
+        sudo dnf install yajl-devel.x86_64 libseccomp.x86_64 libcap.x86_64
+    else
+        echo "Unsupported linux: $NAME, packages libyajl, libseccomp, libcap may need to be installed for krun to work"
+    fi
+}
+
 validate=0
 function check_prereqs {
    if [ $(uname) != Linux ] ; then
@@ -71,9 +95,13 @@ function get_bundle {
       echo Install either KVM or KKM Module and then validate installation by running
       echo $PREFIX/bin/km $PREFIX/tests/hello_test.km Hello World
    fi
+   if [ $pkgs_missing -ne 0 ]; then
+      echo "Some packages need to be installed to use all functionality"
+   fi
 }
 
 # main
 check_args
 check_prereqs
+install_packages
 get_bundle
