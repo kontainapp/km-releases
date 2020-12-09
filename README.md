@@ -467,21 +467,78 @@ That also covers gdb-based GUI - e.g. Visual Studio Code `Debug`.
 Payload running as a unikernel in Kontain VM will generate a coredump in the same cases it would have generated if running on Linux. The file name is `kmcore` (can be changed with `--coredump=file` flag).
 You can analyze the payload coredump as a regular Linux coredump, e.g. `gdb program.km kmcore`
 
-### Live debugging - command line
+### Live payload debugging - command line
 
-Pass `-g` flag to km to start in "GDB" mode, and it will print `gdb` command to run to start debugging session right away.
- e.g. :
+You can attach the standard gdb client to a km payload if you arrange for the gdb server inside km to be listening for a connection from the gdb client.
+Several flags control km's activation of the internal gdb server.
+The simplest flag "-g[port]" tells km to start the gdb server listening on the specified port and then wait for a connection from
+the gdb client.  The default gdb listening port is 2159 (gdbremote from /etc/services).  The km gdb server only uses tcp.
+When you attach to the gdb server the payload is waiting to begin running at the _start entry point in the km payload.
+
+You can also have km's gdb server listening for connections in the background by using the km \-\-gdb-listen command line flag.
+With this flag the payload begins running immediately and the gdb server listens for gdb client connection while the payload runs.
+You can connect to the gdb server, disconnect, and reconnect as often as you want until the payload completes.
+When you connect to the km gdb server all payload threads will be paused until the gdb client starts them using the "cont" or "step" or "next" commands.
+
+You can only connect to a payload's gdb server from the machine hosting the payload.
+
+km gdb server testing has been done using gdb client with version "GNU gdb (GDB) Fedora 9.1-5.fc32".
+
+The km implementation uses one payload signal to pause payload threads while the gdb client is stopping the payload.  That is signal 63.
+To avoid seeing gdb client messages about this signal it is a good idea to either manually run the "handle SIG63 nostop" command for each debugging
+session or add this command to your ~/.gdbinit file.
+
+If your payload uses fork then the child payload resets all of the gdb related settings so the child payload can't be debugged.  We are working on correcting this shortfall.
+When the child payload finally exec's to a new payload, no gdb related arguments are added to the invocation of km.
+So, there is no debugging in the exec'ed payload either.  We are working on this too.
+
+#### Known gdb related issues
+
+Stack traces are sometimes incomplete.
+gdb non-stop mode (set non-stop on) is not supported.
+Do not alter the GS segment selector in your programs.  It is used internally by km.
+The "info registers" command does not display the contents of the floating point registers.
+The segment register contents are not displayed correctly.
+When debugging payloads with dynamic linking, the km gdb server consumes one payload fd for each library.  Disconnecting the gdb client causes the fd's to be closed and freed.
+
+#### km gdb example
+
+When starting a payload with gdb debugging enabled you would do the following and expect to see the following lines dispalyed by km.
 
 ```
-/opt/kontain/bin/km -g ./cpython/python.km
-./cpython/python.km: Waiting for a debugger. Connect to it like this:
-        gdb --ex="target remote localhost:2159" ./cpython/python.km
+[someone@work ~]$ /opt/kontain/bin/km -g ./tests/hello_test.km
+./tests/hello_test.km: Waiting for a debugger. Connect to it like this:
+        gdb --ex="target remote localhost:2159" ./tests/hello_test.km
 GdbServerStubStarted
 ```
 
-If you want to run payload and connect gdb to it in-flight, pass `-gdb-listen` to KM.
+You would then run the following to attach the gdb client to the payload debugger:
 
-**TODO**: more documentation and examples here.
+```
+[someone@work ~]$ gdb --ex="target remote localhost:2159" ./tests/hello_test.km
+GNU gdb (GDB) Fedora 9.1-5.fc32
+Copyright (C) 2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-redhat-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+Remote debugging using localhost:2159
+Reading /home/paulp/ws/ws2/km/tests/hello_test.km from remote target...
+warning: File transfers from remote targets can be slow. Use "set sysroot" to access files locally instead.
+Reading /home/paulp/ws/ws2/km/tests/hello_test.km from remote target...
+Reading symbols from target:/home/paulp/ws/ws2/km/tests/hello_test.km...
+0x0000000000201032 in _start ()
+(gdb)
+```
 
 ### Visual Studio Code
 
