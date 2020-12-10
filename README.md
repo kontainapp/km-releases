@@ -469,37 +469,23 @@ You can analyze the payload coredump as a regular Linux coredump, e.g. `gdb prog
 
 ### Live payload debugging - command line
 
-You can attach the standard gdb client to a km payload if you arrange for the gdb server inside km to be listening for a connection from the gdb client.
+In order to attach a standard gdb client to a km payload you need to tell the KM gdb server to listen for a client connection.
 Several flags control km's activation of the internal gdb server.
-The simplest flag "-g[port]" tells km to start the gdb server listening on the specified port and then wait for a connection from
-the gdb client.  The default gdb listening port is 2159 (gdbremote from /etc/services).  The km gdb server only uses tcp.
-When you attach to the gdb server the payload is waiting to begin running at the _start entry point in the km payload.
+```
+ -g[port] - stop before the payload entry point and wait for the gdb client to connect, the default port is 2159
+ --gdb_listen - allow the payload to run but the km gdb server waits in the background for a gdb client connection
+```
 
-You can also have km's gdb server listening for connections in the background by using the km \-\-gdb-listen command line flag.
-With this flag the payload begins running immediately and the gdb server listens for gdb client connection while the payload runs.
 You can connect to the gdb server, disconnect, and reconnect as often as you want until the payload completes.
 When you connect to the km gdb server all payload threads will be paused until the gdb client starts them using the "cont" or "step" or "next" commands.
 
-You can only connect to a payload's gdb server from the machine hosting the payload.
+The gdb command reference can be found here: https://sourceware.org/gdb/current/onlinedocs/gdb/
 
-km gdb server testing has been done using gdb client with version "GNU gdb (GDB) Fedora 9.1-5.fc32".
+Note: km gdb server testing has been done using gdb client with version "GNU gdb (GDB) Fedora 9.1-5.fc32".
 
-The km implementation uses one payload signal to pause payload threads while the gdb client is stopping the payload.  That is signal 63.
-To avoid seeing gdb client messages about this signal it is a good idea to either manually run the "handle SIG63 nostop" command for each debugging
-session or add this command to your ~/.gdbinit file.
+KM implementation uses a dedicated signal (currently # 63) to coordinate and pause payload threads. To avoid GDB messages and stops in this internal signal , use gdb "handle SIG63 nostop" command - either for each debugging session, or add it to your ~/.gdbinit file.
 
-If your payload uses fork then the child payload resets all of the gdb related settings so the child payload can't be debugged.  We are working on correcting this shortfall.
-When the child payload finally exec's to a new payload, no gdb related arguments are added to the invocation of km.
-So, there is no debugging in the exec'ed payload either.  We are working on this too.
-
-#### Known gdb related issues
-
-Stack traces are sometimes incomplete.
-gdb non-stop mode (set non-stop on) is not supported.
-Do not alter the GS segment selector in your programs.  It is used internally by km.
-The "info registers" command does not display the contents of the floating point registers.
-The segment register contents are not displayed correctly.
-When debugging payloads with dynamic linking, the km gdb server consumes one payload fd for each library.  Disconnecting the gdb client causes the fd's to be closed and freed.
+If your payload uses fork() then the child payload can't be debugged with gdb.  We are working to correct this.
 
 #### km gdb example
 
