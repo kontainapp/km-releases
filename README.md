@@ -467,21 +467,49 @@ That also covers gdb-based GUI - e.g. Visual Studio Code `Debug`.
 Payload running as a unikernel in Kontain VM will generate a coredump in the same cases it would have generated if running on Linux. The file name is `kmcore` (can be changed with `--coredump=file` flag).
 You can analyze the payload coredump as a regular Linux coredump, e.g. `gdb program.km kmcore`
 
-### Live debugging - command line
+### Live payload debugging - command line
 
-Pass `-g` flag to km to start in "GDB" mode, and it will print `gdb` command to run to start debugging session right away.
- e.g. :
+In order to attach a standard gdb client to a km payload you need to tell the KM gdb server to listen for a client connection.
+Several flags control km's activation of the internal gdb server.
+```
+ -g[port] - stop before the payload entry point and wait for the gdb client to connect, the default port is 2159
+ --gdb_listen - allow the payload to run but the km gdb server waits in the background for a gdb client connection
+```
+
+You can connect to the gdb server, disconnect, and reconnect as often as you want until the payload completes.
+When you connect to the km gdb server all payload threads will be paused until the gdb client starts them using the "cont" or "step" or "next" commands.
+
+The gdb command reference can be found here: https://sourceware.org/gdb/current/onlinedocs/gdb/
+
+Note: km gdb server testing has been done using gdb client with version "GNU gdb (GDB) Fedora 9.1-5.fc32".
+
+KM implementation uses a dedicated signal (currently # 63) to coordinate and pause payload threads. To avoid GDB messages and stops in this internal signal , use gdb "handle SIG63 nostop" command - either for each debugging session, or add it to your ~/.gdbinit file.
+
+If your payload uses fork() then the child payload can't be debugged with gdb.  We are working to correct this.
+
+#### km gdb example
+
+When starting a payload with gdb debugging enabled you would do the following and expect to see the following lines dispalyed by km.
 
 ```
-/opt/kontain/bin/km -g ./cpython/python.km
-./cpython/python.km: Waiting for a debugger. Connect to it like this:
-        gdb --ex="target remote localhost:2159" ./cpython/python.km
+[someone@work ~]$ /opt/kontain/bin/km -g ./tests/hello_test.km
+./tests/hello_test.km: Waiting for a debugger. Connect to it like this:
+        gdb -q --ex="target remote localhost:2159" ./tests/hello_test.km
 GdbServerStubStarted
 ```
 
-If you want to run payload and connect gdb to it in-flight, pass `-gdb-listen` to KM.
+You would then run the following to attach the gdb client to the payload debugger:
 
-**TODO**: more documentation and examples here.
+```
+[someone@work ~]$ gdb -q --ex="target remote localhost:2159" ./tests/hello_test.km
+Remote debugging using localhost:2159
+Reading /home/paulp/ws/ws2/km/tests/hello_test.km from remote target...
+warning: File transfers from remote targets can be slow. Use "set sysroot" to access files locally instead.
+Reading /home/paulp/ws/ws2/km/tests/hello_test.km from remote target...
+Reading symbols from target:/home/paulp/ws/ws2/km/tests/hello_test.km...
+0x0000000000201032 in _start ()
+(gdb)
+```
 
 ### Visual Studio Code
 
