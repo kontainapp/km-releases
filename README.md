@@ -494,29 +494,14 @@ When starting a payload with gdb debugging enabled you would do the following an
 ```
 [someone@work ~]$ /opt/kontain/bin/km -g ./tests/hello_test.km
 ./tests/hello_test.km: Waiting for a debugger. Connect to it like this:
-        gdb --ex="target remote localhost:2159" ./tests/hello_test.km
+        gdb -q --ex="target remote localhost:2159" ./tests/hello_test.km
 GdbServerStubStarted
 ```
 
 You would then run the following to attach the gdb client to the payload debugger:
 
 ```
-[someone@work ~]$ gdb --ex="target remote localhost:2159" ./tests/hello_test.km
-GNU gdb (GDB) Fedora 9.1-5.fc32
-Copyright (C) 2020 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
-Type "show copying" and "show warranty" for details.
-This GDB was configured as "x86_64-redhat-linux-gnu".
-Type "show configuration" for configuration details.
-For bug reporting instructions, please see:
-<http://www.gnu.org/software/gdb/bugs/>.
-Find the GDB manual and other documentation resources online at:
-    <http://www.gnu.org/software/gdb/documentation/>.
-
-For help, type "help".
-Type "apropos word" to search for commands related to "word".
+[someone@work ~]$ gdb -q --ex="target remote localhost:2159" ./tests/hello_test.km
 Remote debugging using localhost:2159
 Reading /home/paulp/ws/ws2/km/tests/hello_test.km from remote target...
 warning: File transfers from remote targets can be slow. Use "set sysroot" to access files locally instead.
