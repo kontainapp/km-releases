@@ -630,6 +630,17 @@ Sandboxing via syscall intercept
 Supported syscalls and delegation to host
   relations to seccomp
 
+### Snapshot Overview
+
+A KM snapshot is a file that contains a point-in-time image of a running KM guest process. When a KM process is resumed, the guest process continues from the point where the snapshot was taken.
+
+There are two ways to create KM snapshots:
+
+- Internal: the guest program links with the KM API and calls `snapshot.take()`.
+- External: an external agent uses the `km_cli` command to create a snapshot.
+
+A KM snapshot file is an ELF format core file with KM specific records in the NOTES section. This means that KM snapshot files can be read by standard `binutil` tools.
+
 ### Solution for no-nested-virtualization machines
 
 When nested virtualization is not available, Kontain provides a Kontain Kernel module (`kkm`) that implements a subset of KVM ioctls. It does not reuse KVM code or algorithms, because the requiements are much simpler - but it does implement a subset if `KVM ioctls` and uses the same control paradigm. It communicates via special device `/dev/kkm`.
