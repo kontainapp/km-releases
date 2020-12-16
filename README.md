@@ -51,8 +51,11 @@ vitualization (/dev/kvm) available - e.g. VMWare Fusion on Mac supports it out o
 
 ### Install Kontain files
 
-Then, use one of the following methods:
-#### Use wget directly
+Install script will install Kontain files, and then validate execution of a simple unikernel in Kontain VM. The validation with simply print "Hello world".
+
+Install script can be invoked using one of these methods:
+
+#### Run script downloaded with wget
 
 Make sure *wget is installed* and install it if needed (Fedora: `sudo dnf install wget`. Ubuntu: `sudo apt-get install wget`), and then run these commands:
 
@@ -61,7 +64,7 @@ sudo mkdir -p /opt/kontain ; sudo chown $(whoami) /opt/kontain
 wget https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh -O - -q | bash
 ```
 
-#### Use git
+#### Run script from git repo
 
 Alternatively, you can clone the repository and run the script directly. Note that `wget` is still needed by this script to pull the actual bundle:
 
@@ -72,24 +75,26 @@ git clone https://github.com/kontainapp/km-releases
 ```
 
 Either way, the script will try to un-tar the content into /opt/kontain. If you don't have enough access, the script will advice on the next step.
-
-### Validate the installation
-
-The install script will validates prerequisites and places necessary files into the `/opt/kontain` directory, then try to run "Hello, World!" unikernel.
-
-You can also test the installation manually:
-
-```bash
-$ /opt/kontain/bin/km /opt/kontain/tests/hello_test.km Hello World
-Hello, world
-Hello, argv[0] = '/opt/kontain/tests/hello_test.km'
-Hello, argv[1] = 'Hello'
-Hello, argv[2] = 'World'
-```
-
 ### Install for Docker
 
-You can run Kontain payload wrapped in a native Docker container.... in this case, all Docker overhead is still going to be around, but you will have VM / unikernel without extra overhead. **No additional installation (other than regular `docker` or `moby` or `podman`) is required**
+You can run Kontain payload wrapped in a native Docker container.... in this case, all Docker overhead is still going to be around, but you will have VM / unikernel without extra overhead.
+Install docker engine (https://docs.docker.com/engine/install/) or moby-engine (`sudo dnf install docker` on Fedora does this. `podman` is also supported.
+
+#### Warnining: cgroups version mismatch between Docker and Fedora Linux
+
+As if 10/2020 there was glitch between latest docker and latest fedora 32 configuration. While it is not related to Kontain, it  may impact `docker run` commands if you have a fresh docker installation.
+Here is a good summary of reasons, and instruction for fixes: https://fedoramagazine.org/docker-and-fedora-32/
+
+* Symptom: **docker: Error response from daemon: OCI runtime create failed: this version of runc doesn't work on cgroups v2: unknown** error message for `docker run'.
+* Fix:
+  * Enable cgroups v1 on fedora32 `sudo grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"` and reboot,
+  * make sure firewall rules are not blocking docker0 interface
+
+```
+sudo firewall-cmd --permanent --zone=trusted --add-interface=docker0
+sudo firewall-cmd --permanent --zone=FedoraWorkstation --add-masquerade
+sudo systemctl restart firewalld
+```
 
 #### Kontain OCI runtime (krun)
 
@@ -428,14 +433,17 @@ Example:  You can run a interactive python as inside Kontain VM using this:
 To speedup startup time of an application with a long warm-up time Kontain provides a mechanism to create a "snapshot" unikernel that represents the state of the application.
 A snapshot is an ELF file which can be run as directly as a unikernel in Kontain VM, but captures payload state-in time.
 
-Snapshot can be triggered by an API called from the payload, or by an external `km_cli` running on host and communicating to Kontain Monitor (KM)
+Snapshot can be triggered by an API called from the payload, or by an external `km_cli` running on host and communicating to Kontain Monitor (KM).
+See examples/python/README.md for details on using the API in python
 
 Limitations:
 
 * no coordination of multi-process payload snapshots
 
-TODO:
- * Doc and example
+
+TODO
+
+ * Doc and example for C and Java, and for building a new container with snapshot
 
 ### Using with Kubernetes
 
