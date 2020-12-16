@@ -2,7 +2,7 @@
 
 Public repository with Kontain binary releases. Kontain code is not open source currently and is maintained in a private repository.
 
-Kontain is the way to run container workloads "Secure, Fast and Small - choose three". Kontain runs workloads in a dedicated VM, as a unikernel - within Kontain VM. A workload can be a regular Linux executable, or a Kontain "unikernel" - your code relinked with Kontain libraries to run directly on virtual hardware, without OS layer in the VM. Running in a Kontain Virtual Machine provides VM level isolation/security, but without any of VM overhead - in act, Kontain workloads startup time is closer to Linux process and is faster than Docker containers.
+Kontain is the way to run container workloads "Secure, Fast and Small - choose three". Kontain runs workloads in a dedicated VM, as a unikernel - within Kontain VM. A workload can be a regular Linux executable, or a Kontain "unikernel" - your code relinked with Kontain libraries to run directly on virtual hardware, without OS layer in the VM. Running in a Kontain Virtual Machine provides VM level isolation/security, but without any of VM overhead - in fact, Kontain workloads startup time is closer to that of Linux process and is faster than Docker containers.
 
 Kontain seamlessly plugs into Docker or Kubernetes run time environments.
 
@@ -41,12 +41,12 @@ The packaging and docs are work in progress and may change without notice. Refer
 
 ### Check Pre-requisites
 
-Currently only `Linux` is supported. Kernel 5.0 and above is recommended. Kernel 4.15+ is OK, prior kernels are not supported
+Currently only `Linux` is supported. Kernel 5.0 and above is recommended. Kernel 4.15+ is OK, prior kernels are not supported.
 If you want to give it a try on OSX or vSphere or Windows, please create a Linux VM with nested
 vitualization (/dev/kvm) available - e.g. VMWare Fusion on Mac supports it out of the box.
 
 * To check Linux kernel version, use `uname -a`.
-* To check that KVM is and kvm module is loaded use `lsmod | grep kvm` ; also validate that /dev/kvm exists `ls -l /dev/kvm`.
+* To check that KVM is and kvm module is loaded use `lsmod | grep kvm` ; also validate that /dev/kvm exists and has read/write permissions `ls -l /dev/kvm`.
 
 
 ### Install Kontain files
@@ -54,7 +54,7 @@ vitualization (/dev/kvm) available - e.g. VMWare Fusion on Mac supports it out o
 Then, use one of the following methods:
 #### Use wget directly
 
-Make sure *wget is installed* and install it if needed (Fedora: `sudo dnf install wget`. Ubuntu: `sudo apt-get install wget`) , and then run these commands:
+Make sure *wget is installed* and install it if needed (Fedora: `sudo dnf install wget`. Ubuntu: `sudo apt-get install wget`), and then run these commands:
 
 ```bash
 sudo mkdir -p /opt/kontain ; sudo chown $(whoami) /opt/kontain
@@ -104,20 +104,24 @@ krun needs some packages which may not be on your system, install them as follow
 
 For fedora:
 
-sudo dnf install yajl-devel.x86_64 libseccomp.x86_64 libcap.x86_64
+```bash
+sudo dnf install -y yajl-devel.x86_64 libseccomp.x86_64 libcap.x86_64
+```
 
 For ubuntu:
 
+```bash
 sudo apt-get update
 sudo apt-get install -y libyajl2 libseccomp2 libcap2
+```
 
 Configuring `krun`:
 
 * Runtimes config for docker
 
-Edit /etc/docker/daemon.json using sudo to run your editor and add the following:
+Edit `/etc/docker/daemon.json` using sudo to run your editor and add the following:
 
-```txt
+```json
   {
     "default-runtime": "runc",
     "runtimes": {
@@ -151,7 +155,7 @@ posix.uname_result(sysname='kontain-runtime', nodename='ddef05d46147', release='
 #### Validate
 
 To validate with regular runtime, and also to build/run the first container with Kontain Unikernel, build a simple docker container.
-Assuming you validated the install so the `file` and `dir` vars , and the actual files are still around:
+Assuming you validated the install so the `file` and `dir` vars, and the actual files are still around:
 
 ```bash
 cat <<EOF | docker build -t kontain-hello $dir -f -
@@ -170,7 +174,7 @@ To validate with `krun` (when we add `krun` to the bundle) `docker run --rm --ru
 
 In order to run Kontainerized payloads in Kontain VM on Kubernetes, each
 Kubernetes node needs to have KM installed, and we also need KVM Device
-plugin which allows the non-privileged pods access to /dev/kvm
+plugin which allows the non-privileged pods access to `/dev/kvm`
 
 All this is accomplished by deploying KontainD Daemon Set: KontainD serves
 both as an installer for kontain and a device manager for kvm/kkm devices on
@@ -207,8 +211,8 @@ kontaind           1         1         1       1            1           <none>  
 
 ## Background
 
-Kontain provides a mechanism to create a unikernel from an unmodified application code, and execute the unikernel it in a dedicated VM.
-Kontain provides VM level isolation guarantees for security with very low overhead compare to regular linux processes.
+Kontain provides a mechanism to create a unikernel from an unmodified application code, and execute the unikernel in a dedicated VM.
+Kontain provides VM level isolation guarantees for security with very low overhead compared to regular linux processes.
 For example, payloads run under Kontain are immune to Meltdown security flaw even on un-patched kernels and CPUs.
 
 Kontain consists of two components - Virtual Machine runtime, and tools to build unikernels.
@@ -241,17 +245,17 @@ In Containers universe, Kontain provides an OCI-compatible runtime for seamless 
 
 The Linux kernel that Kontain runs on must have a Kontain supported virtual machine kernel module installed in order for Kontain to work. Currently regular Linux `KVM` module and Kontain proprietary `KKM` module are supported by Kontain.
 
-The `KVM` module is available on most Linux kernels. Kontain requies Linux Kernel 5.x to properly function due to some changes and improvements in 5.x KVM Module.
+The `KVM` module is available on most Linux kernels. Kontain requires Linux Kernel 4.15+ to properly function, 5.0+ Kernels are recommended.
 
 Some cloud service providers, AWS in particular, do not supported nested virtualization with `KVM`. For these cases, the Kontain proprietary `KKM` module is used.
 
-To make it easie to try Kontain on AWS, Kontain provides a pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled). See below in `Amazon - pre-built AMI` section
+To make it easier to try Kontain on AWS, Kontain provides a pre-built AMI to experiment with KKM (Ubuntu 20 with KKM preinstalled). See below in `Amazon - pre-built AMI` section
 
-Kontain manipulates VMs and needs acess to either `/dev/kvm` device, or `/dev/kkm` device , depending on the kernel module used.
+Kontain manipulates VMs and needs access to either `/dev/kvm` device, or `/dev/kkm` device, depending on the kernel module used.
 
 ## Usage
 
-The following getting content is just examples, and should be seen as more of a 'getting started' guide than a full usage list.
+The following content is just examples, and should be seen as more of a 'getting started' guide than a full usage list.
 
 ### Create and run your first unikernel
 
@@ -342,9 +346,9 @@ func charsToString(ca []int8) string {
   var lens int
   for ; lens < len(ca); lens++ {
      if ca[lens] == 0 {
-     break
+       break
      }
-   s[lens] = uint8(ca[lens])
+     s[lens] = uint8(ca[lens])
    }
    return string(s[0:lens])
 }
@@ -363,7 +367,7 @@ go build -o $dir/$file.km $dir/$file.go
 /opt/kontain/bin/km $dir/$file.km
 ```
 
-For more optimal unikernel additional linker options:
+For more optimal unikernel use additional linker options:
 
 ```bash
 go build -ldflags '-T 0x201000 -extldflags "-no-pie -static -Wl,--gc-sections"' -o test.km test.go
