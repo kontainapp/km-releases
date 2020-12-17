@@ -88,7 +88,7 @@ Either way, the script will try to un-tar the content into /opt/kontain. If you 
 You can run Kontain payload wrapped in a native Docker container.... in this case, all Docker overhead is still going to be around, but you will have VM / unikernel without extra overhead.
 Install docker engine (https://docs.docker.com/engine/install/) or moby-engine (`sudo dnf install docker` on Fedora does this. `podman` is also supported.
 
-#### Warnining: cgroups version mismatch between Docker and Fedora Linux
+#### Warning: cgroups version mismatch between Docker and Fedora Linux
 
 As if 10/2020 there was glitch between latest docker and latest fedora 32 configuration. While it is not related to Kontain, it  may impact `docker run` commands if you have a fresh docker installation.
 Here is a good summary of reasons, and instruction for fixes: https://fedoramagazine.org/docker-and-fedora-32/
@@ -164,24 +164,6 @@ You should see output that looks like this:
 ```txt
 posix.uname_result(sysname='kontain-runtime', nodename='ddef05d46147', release='4.1', version='preview', machine='kontain_KVM')
 ```
-
-#### Validate
-
-To validate with regular runtime, and also to build/run the first container with Kontain Unikernel, build a simple docker container.
-Assuming you validated the install so the `file` and `dir` vars, and the actual files are still around:
-
-```bash
-cat <<EOF | docker build -t kontain-hello $dir -f -
-FROM scratch
-COPY $file.km /
-ENTRYPOINT [ "/opt/kontain/bin/km"]
-CMD [ "/$file.km" ]
-EOF
-
-docker run --rm -v /opt/kontain/bin/km:/opt/kontain/bin/km:z --device /dev/kvm kontain-hello
-```
-
-To validate with `krun` (when we add `krun` to the bundle) `docker run --rm --runtime=krun kontain-hello`
 
 ### Kubernetes
 
@@ -272,10 +254,6 @@ The following content is just examples, and should be seen as more of a 'getting
 
 ### Create and run your first unikernel
 
-Create an example program:
-
-#### Example Program
-
 Create playground directory and example program:
 
 ```C
@@ -321,6 +299,26 @@ Note that `.km` is the ELF file with Kontain unikernel, and the last command was
 
 To get help for KM command line, `/opt/kontain/bin/km --help`
 
+### Build and run a Kontainer
+
+#### Validate
+
+To build/run the first container with Kontain Unikernel (aka `kontainer`), use regular `docker build`.
+Assuming the previous example was run so the `file` and `dir` vars and the actual files are still around:
+
+```bash
+cat <<EOF | docker build -t kontain-hello $dir -f -
+FROM scratch
+COPY $file.km /
+ENTRYPOINT [ "/opt/kontain/bin/km"]
+CMD [ "/$file.km" ]
+EOF
+
+docker run --rm --runtime=krun kontain-hello
+```
+
+Regular run time can also be used for "run" commmand (but not for exec):
+`docker run --rm -v /opt/kontain/bin/km:/opt/kontain/bin/km:z --device /dev/kvm kontain-hello`
 
 ### Building your own Kontain unikernel
 
