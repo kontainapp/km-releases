@@ -53,15 +53,23 @@ vitualization (/dev/kvm) available - e.g. VMWare Fusion on Mac supports it out o
 
 Install script will install Kontain files, and then validate execution of a simple unikernel in Kontain VM. The validation with simply print "Hello world".
 
-Install script can be invoked using one of these methods:
+By default, the script will download and install a release mentioned in `default-release` file in this repo. A specific release can downloaded and installed by passing release name to the install script as the first argument - examples below.
 
 #### Run script downloaded with wget
 
 Make sure *wget is installed* and install it if needed (Fedora: `sudo dnf install wget`. Ubuntu: `sudo apt-get install wget`), and then run these commands:
 
 ```bash
-sudo mkdir -p /opt/kontain ; sudo chown $(whoami) /opt/kontain
+sudo mkdir -p /opt/kontain ; sudo chown -R $(whoami) /opt/kontain
 wget https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh -O - -q | bash
+```
+
+To install a non-default release, e.g. `v0.1-test`:
+
+```bash
+sudo mkdir -p /opt/kontain ; sudo chown -R $(whoami) /opt/kontain
+wget https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh -q
+chmod a+x ./kontain-install.sh; ./kontain-install.sh v0.1-test
 ```
 
 #### Run script from git repo
@@ -69,7 +77,7 @@ wget https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-ins
 Alternatively, you can clone the repository and run the script directly. Note that `wget` is still needed by this script to pull the actual bundle:
 
 ```bash
-sudo mkdir -p /opt/kontain ; sudo chown $(whoami) /opt/kontain
+sudo mkdir -p /opt/kontain ; sudo chown -R $(whoami) /opt/kontain
 git clone https://github.com/kontainapp/km-releases
 ./km-releases/kontain-install.sh
 ```
