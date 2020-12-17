@@ -440,7 +440,7 @@ To speedup startup time of an application with a long warm-up time Kontain provi
 A snapshot is an ELF file which can be run as directly as a unikernel in Kontain VM, but captures payload state-in time.
 
 Snapshot can be triggered by an API called from the payload, or by an external `km_cli` running on host and communicating to Kontain Monitor (KM).
-See examples/python/README.md for details on using the API in python
+See `examples/python/README.md` for details on using the API in python
 
 Limitations:
 
@@ -455,7 +455,7 @@ TODO
 
 After installation of kontaind is completed (see above), you can use API server/kubectl to deploy Kontain-based pods to a Kubernetes cluster.
 A spec for the pod needs to request /dev/kvm device in the `resources` section, host volume mount,
-and _entrypoint calling KM (unless symlinks are set up - see below)._??? I'd say make this default.
+and _entrypoint calling KM (unless symlinks are set up - see below).
 
 Example:
 
