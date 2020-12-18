@@ -782,6 +782,42 @@ Please choose either Ubuntu 18 or Ububtu 20, or Debian 10 when creating a VM
 
 Kontain works on other clouds  in a Linux VM with (1) nested virtualization enabled (2) Linux kernel 5.x
 
+## Know Issues
+
+Known issue are tracked in the "Known Issues" Milestone in `kontainapp/km` private repo.
+Some of the key ones are duplicated here; which one make it to the next drop will depend on the feedback.
+
+
+### Language systems and libraries
+
+* CPU affinity API() are silently ignored
+* Some of the huge ML packages (e.g. TensorFlow) are not tested with Python.km
+* Native binaries (with glibc) are experimental and may have multiple issues - though we do test them in the CI
+* Language runtime base images are only provided for a single version per language. E.g. only python 3.7. No Python 2 or Python 3.8.
+
+
+### Kontain Monitor and debugging
+
+* there is no management plane to enumerate all running Kontain VMs
+* floating point status is not retained across snapshots
+* snapshots are per VM - no support for coordinated snapshot for parent + childen yet
+* issues in GDB:
+  * Stack trace through a signal handler is not useful
+  * Handle variables in thread local storage - currently ‘p var’ would generate an error
+  * Floating point registers not supported
+* only a small subset of /proc/self is implemented (the one we saw being used in Node.js, python 3 and jvm 11)
+* getrlimit/setrlimit are not virtualized and are reditrected to the host
+
+ ### Docker and Kubernetes
+
+* Kontaind uses device plugin that has bugs , resulting in (rare) refusal to provide access to /dev/kvm. Workaround: re-deploy kontaid
+* krun runtime is missing 'checkpoint/resume' implementation
+* krun is not used on Kubernetes yet - use regular runtimes there
+
+### Clouds
+
+* See "platform support" earlier in this doc
+
 ## FAQ
 
 ### Is it OSS?
