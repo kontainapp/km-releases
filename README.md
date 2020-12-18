@@ -446,10 +446,23 @@ Limitations:
 
 * no coordination of multi-process payload snapshots
 
+#### Java API
 
-TODO
+```java
+package app.kontain.snapshots;
 
- * Doc and example for C and Java, and for building a new container with snapshot
+...
+new Snapshot().take("test_snap", "Testing snapshot");
+
+```
+
+### python API
+
+
+```python
+    from kontain import snapshots
+    snapshots.take(live=True)
+```
 
 ### Using with Kubernetes
 
@@ -568,10 +581,7 @@ refer to kontain kontainer.
 
 #### Install Faktory
 
-TODO: fix the download link.
-```bash
-curl -sSL <download link TBD> | bash -s
-```
+faktory is pre-installed in /opt/kontain/bin/faktory
 
 #### Java Example
 
@@ -667,25 +677,7 @@ Note: we are working on OCI Runtime that will automate the above. This document 
 
 ## Architecture
 
-TODO
-
-### Kontain Monitor (VM hardware model) and Kontain unikernels
-
-TODO. Outline:
-
-Link to google architecture doc (need to make it public after review https://docs.google.com/document/d/1UckXwTfVgcJ5g4hvz20yJf51bDkTJs4YIwuRzFjxrXQ/edit#heading=h.z80ov6pz80hk)
-
-System design diagram
-Hardware model - threads, memory, IO
-Virtualization levels (in-KM, outside of KM)
-Pillars (no memory mgmt, delegation to host, etc)
-KM code components
-
-Supported syscalls - philosophy
-Sandboxing vi OUT/hcalls
-Sandboxing via syscall intercept
-Supported syscalls and delegation to host
-  relations to seccomp
+TODO - Arch. whitepaper is in editorial review
 
 ### Snapshot Overview
 
@@ -702,10 +694,9 @@ A KM snapshot file is an ELF format core file with KM specific records in the NO
 
 When nested virtualization is not available, Kontain provides a Kontain Kernel module (`kkm`) that implements a subset of KVM ioctls. It does not reuse KVM code or algorithms, because the requiements are much simpler - but it does implement a subset if `KVM ioctls` and uses the same control paradigm. It communicates via special device `/dev/kkm`.
 
-TODO: KKM architecture (high level) goes here
+TODO - KKM architecture whitepaper is in editorial review
 
 `kkm` requires to be built with the same kernel version and same kernel config as the running system. We are working on proper installation.
-TODO: doc on installation-with-build, when installation is ready
 
 #### Amazon - pre-built AMI
 
@@ -822,7 +813,7 @@ Some of the key ones are duplicated here; which one make it to the next drop wil
 
 ### Is it OSS?
 
-These are binary-only releases, Kontain code is currently not open sourced and is maintained in the a private repo. However, we are more than happy to collaborate with people who would like to hack on the code with us! Get in touch by emailing TODO.
+These are binary-only releases, Kontain code is currently not open sourced and is maintained in the a private repo. However, we are more than happy to collaborate with people who would like to hack on the code with us! Get in touch by openign an issue or emailing to info@kontain.app.
 
 ### How to install KKM
 
