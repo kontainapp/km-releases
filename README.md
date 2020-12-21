@@ -12,7 +12,7 @@ Kontain release includes Kontain Monitor, runtime libraries, tools and pre-build
 
 **Version:** 0.10-beta
 
-The packaging and docs are work in progress and may change without notice. Refer to the [Releases](https://github.com/RichardLitt/km-releases/releases) for nightly binary releases.
+The packaging and docs are work in progress and may change without notice.
 
 ## Table of Contents
 
@@ -30,24 +30,39 @@ The packaging and docs are work in progress and may change without notice. Refer
 
 ## Platform support
 
-* Kontain currently supports and is tested on Linux distribution with kernel 4.15 and above
-  * We recommend Fedora 32 or Ubuntu 20.
-  * Note than Debian 9 (default in GCP at the moment) is based on 4.09 Kernel, so you'd need to choose other distributions with fresher kernel, e.g. Ubuntu 20 LTS.
-  * Earlier distributions (e.g. Ubuntu 18 LTS) are not fully supported, mainly due to limited testing. if you need one of these please try first, and if there are issues please submit an issue for this repository.
-* Kontain needs access to virtualization, so it works on Linux with KVM enabled, or Linux with Kontain Kernel Module (KKM) installed and loaded.
-  * On AWS, Kontain KKM kernel model is required. For demo purposes, we provide an AWS AMI of Ubuntu 20 with KKM installed and pre-loaded.
+- Kontain currently supports only **Linux** hosts with kernel 4.15 and above. We recommend `Fedora 32` or `Ubuntu 20`.
+- Kontain needs access to virtualization - i.e. *KVM module* enabled, or Linux with *Kontain Kernel Module (KKM) installed and loaded*.
+- `On AWS` non-metal instances, Kontain KKM kernel module is required, For demo purposes, we provide an AWS AMI of Ubuntu 20 with KKM installed and pre-loaded.
+- `On GCP`, do not use default Linux VM. Default (as of 11/2020) provisioning of a linux VM uses Debian 9 distribution, which is based on 4.09 Kernel. Please choose other distributions with fresher kernel, e.g. Ubuntu 20 LTS.
+- `Earlier Linux distributions` (e.g. Ubuntu 18 LTS) are not fully supported, mainly due to limited testing. If you need one of these please try first, and if there are issues please submit an issue for this repository.
 
 ## Install
 
 ### Check Pre-requisites
 
-Currently only `Linux` is supported. Kernel 5.0 and above is recommended. Kernel 4.15+ is OK, prior kernels are not supported.
-If you want to give it a try on OSX or vSphere or Windows, please create a Linux VM with nested
+If you want to give it a try on OSX or Windows, please create a Linux VM with nested
 vitualization (/dev/kvm) available - e.g. VMWare Fusion on Mac supports it out of the box.
 
-* To check Linux kernel version, use `uname -a`.
-* To check that KVM is and kvm module is loaded use `lsmod | grep kvm` ; also validate that /dev/kvm exists and has read/write permissions `ls -l /dev/kvm`.
+- To check Linux kernel version, use `uname -a`.
+- To check that KVM is and kvm module is loaded use `lsmod | grep kvm` ; also validate that */dev/kvm* exists and has read/write permissions `ls -l /dev/kvm`.
 
+#### Trying on a dedicated Ubuntu VM
+
+One of the easiest ways to create an Ubuntu VM so you can try Kontain is to use Canonical's `multipass` tool.
+See https://multipass.run for details.
+For example, on Fedora this sequence install multipass, loads and runs Ubuntu 20 with nested KVM, and connects to it:
+
+```sh
+sudo dnf install multipass
+multipass launch -n myvm
+multipass shell myvm
+```
+
+While multipass is available on Linux, OSX and Windows hosts, we still recommend Linux host. On mac by default (withg hyperkit virtualiztion) there is no nested virtualization which Kontain requires. We did not test it on Windows yet
+
+#### Docker and gcc
+
+For docker-related and language-related examples to work, docker and gcc (and Go) need to be installed. For Docker, use `apt-get` installation as described in https://docs.docker.com/engine/install/. **Ubuntu SNAP is not supported**
 
 ### Install Kontain files
 
@@ -93,12 +108,12 @@ Install docker engine (https://docs.docker.com/engine/install/) or moby-engine (
 As if 10/2020 there was glitch between latest docker and latest fedora 32 configuration. While it is not related to Kontain, it  may impact `docker run` commands if you have a fresh docker installation.
 Here is a good summary of reasons, and instruction for fixes: https://fedoramagazine.org/docker-and-fedora-32/
 
-* Symptom: **docker: Error response from daemon: OCI runtime create failed: this version of runc doesn't work on cgroups v2: unknown** error message for `docker run'.
-* Fix:
-  * Enable cgroups v1 on fedora32 `sudo grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"` and reboot,
-  * make sure firewall rules are not blocking docker0 interface
+- Symptom: **docker: Error response from daemon: OCI runtime create failed: this version of runc doesn't work on cgroups v2: unknown** error message for `docker run'.
+- Fix:
+  - Enable cgroups v1 on fedora32 `sudo grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"` and reboot,
+  - make sure firewall rules are not blocking docker0 interface
 
-```
+```bash
 sudo firewall-cmd --permanent --zone=trusted --add-interface=docker0
 sudo firewall-cmd --permanent --zone=FedoraWorkstation --add-masquerade
 sudo systemctl restart firewalld
@@ -111,7 +126,7 @@ Or you can use Kontain `krun` runtime from docker/podman or directly. `krun` is 
 One of many introductions to runtimes can be found here:
 https://medium.com/@avijitsarkar123/docker-and-oci-runtimes-a9c23a5646d6
 
-* krun package requirements
+##### krun package requirements
 
 krun needs some packages which may not be on your system, install them as follows if they are not already present on your system:
 
@@ -130,7 +145,7 @@ sudo apt-get install -y libyajl2 libseccomp2 libcap2
 
 Configuring `krun`:
 
-* Runtimes config for docker
+##### Runtimes config for docker
 
 Edit `/etc/docker/daemon.json` using sudo to run your editor and add the following:
 
@@ -149,6 +164,7 @@ Edit `/etc/docker/daemon.json` using sudo to run your editor and add the followi
 ```
 
 Then restart docker for the change to take effect:
+
 ```bash
 systemctl reload-or-restart docker.service
 ```
@@ -161,6 +177,7 @@ docker run --runtime krun kontainapp/runenv-python -c "import os; print(os.uname
 ```
 
 You should see output that looks like this:
+
 ```txt
 posix.uname_result(sysname='kontain-runtime', nodename='ddef05d46147', release='4.1', version='preview', machine='kontain_KVM')
 ```
@@ -194,15 +211,17 @@ wget https://github.com/kontainapp/km-releases/blob/master/k8s/kontaind/deployme
 ```
 
 To verify:
+
 ```bash
 kubectl get daemonsets
 ```
+
 should show `kontaind` number of DESIRED equal to number of READY:
+
 ```bash
 NAME               DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
 kontaind           1         1         1       1            1           <none>          84d
 ```
-
 
 ## Background
 
@@ -220,17 +239,17 @@ Kontain does not require changes to the application source code in order to run 
 Any program can be converted to unikernel and run in a dedicated VM.
 If application issues fork/exec call, it is supported by spawning additional KM process to manage dedicated VMs.
 
-* A payload is run as a unikernel in a dedicated VM - i.e. directly on virtual hardware,
+- A payload is run as a unikernel in a dedicated VM - i.e. directly on virtual hardware,
   without additional software layer between the app the the virtual machine
-* Kontain VM is a specifically optimized VM Model
+- Kontain VM is a specifically optimized VM Model
   While allowing the payload to use full user space instruction set of the host CPU,
   it provides only the features necessary for the unikernel to execute
-  * CPU lacks features normally available only with high privileges, such as MMU and virtual memory.
+  - CPU lacks features normally available only with high privileges, such as MMU and virtual memory.
     VM presents linear address space and single low privilege level to the program running inside,
     plus a small landing pad for handing traps and signals.
-  * The VM does not have any virtual peripherals or even virtual buses either,
+  - The VM does not have any virtual peripherals or even virtual buses either,
     instead it uses a small number of hypercalls to the KM to interact with the outside world
-  * The VM provides neither BIOS nor support for bootstrap.
+  - The VM provides neither BIOS nor support for bootstrap.
     Instead is has a facility to pre-initialize memory using the binary artifact before passing execution to it.
     It is similar to embedded CPU that has pre-initialized PROM chip with the executable code
 
@@ -324,9 +343,9 @@ Regular run time can also be used for "run" commmand (but not for exec):
 
 To build a Kontain unikernel, you can do one of the following
 
-* Build or use a regular no-libc executable, e.g. GOLANG
-* Link existing object files into a musl-libc based executable (like you would do for Alpine containers)
-* Link existing object files into a Kontain runtime-based executable
+- Build or use a regular no-libc executable, e.g. GOLANG
+- Link existing object files into a musl-libc based executable (like you would do for Alpine containers)
+- Link existing object files into a Kontain runtime-based executable
 
 We recommend statically linked executable (dynamic linking is supported but requires payload access to shared libraries,
 so we will leave it outside of this short intro).
@@ -388,8 +407,8 @@ go build -ldflags '-T 0x201000 -extldflags "-no-pie -static -Wl,--gc-sections"' 
 
 Kontain supports running not-modified Linux executable as unikernel in Kontain VM, provided:
 
-* The executable does not use GLIBC (glibc is not supported yet).
-  * So the executables could be one build for Alpine, or one not using libc (e.g. GOLANG)
+- The executable does not use GLIBC (glibc is not supported yet).
+  - So the executables could be one build for Alpine, or one not using libc (e.g. GOLANG)
 
 Build the musl-based executable with kontain-gcc, using the examples/vars above:
 
@@ -422,9 +441,9 @@ Kontain supports a set of pre-built language systems, as containers you can use 
 
 The images are available on dockerhub as `kontainapp/runenv-<language>-version` e.g. `kontainapp/runenv-python-3.7`. Kontain provides the following pre-built languages:
 
-* jdk-11.0.8
-* node-12.4 (js)
-* python-3.7
+- jdk-11.0.8
+- node-12.4 (js)
+- python-3.7
 
 We will extend the list by the release time. Also - see the section below on linking your own, if needed
 
@@ -444,7 +463,7 @@ See `examples/python/README.md` for details on using the API in python
 
 Limitations:
 
-* no coordination of multi-process payload snapshots
+- no coordination of multi-process payload snapshots
 
 #### Java API
 
@@ -457,7 +476,6 @@ new Snapshot().take("test_snap", "Testing snapshot");
 ```
 
 ### python API
-
 
 ```python
     from kontain import snapshots
@@ -502,7 +520,8 @@ You can analyze the payload coredump as a regular Linux coredump, e.g. `gdb prog
 
 In order to attach a standard gdb client to a km payload you need to tell the KM gdb server to listen for a client connection.
 Several flags control km's activation of the internal gdb server.
-```
+
+```txt
  -g[port] - stop before the payload entry point and wait for the gdb client to connect, the default port is 2159
  --gdb_listen - allow the payload to run but the km gdb server waits in the background for a gdb client connection
 ```
@@ -522,7 +541,7 @@ If your payload uses fork() then the child payload can't be debugged with gdb.  
 
 When starting a payload with gdb debugging enabled you would do the following and expect to see the following lines dispalyed by km.
 
-```
+```txt
 [someone@work ~]$ /opt/kontain/bin/km -g ./tests/hello_test.km
 ./tests/hello_test.km: Waiting for a debugger. Connect to it like this:
         gdb -q --ex="target remote localhost:2159" ./tests/hello_test.km
@@ -531,7 +550,7 @@ GdbServerStubStarted
 
 You would then run the following to attach the gdb client to the payload debugger:
 
-```
+```txt
 [someone@work ~]$ gdb -q --ex="target remote localhost:2159" ./tests/hello_test.km
 Remote debugging using localhost:2159
 Reading /home/paulp/ws/ws2/km/tests/hello_test.km from remote target...
@@ -615,6 +634,7 @@ sudo faktory convert \
 
 To use kontain java runtime environment with dockerfile, user can substitute
 the base image with kontain image.
+
 ```dockerfile
 FROM kontainapp/runenv-jdk-11
 
@@ -706,7 +726,7 @@ AMI is placed in N. California (us-west-1) region. AMI ID is `ami-047e551d80c79d
 
 To create a VM:
 
-```
+```sh
 aws ec2 create-key-pair --key-name aws-kkm --region us-west-1
 aws ec2 run-instances --image-id ami-047e551d80c79dbb7 --count 1 --instance-type t2.micro --region us-west-1 --key-name aws-kkm
 # before next step save the key to ~/.ssh/aws-kkm.pem and chown it to 400
@@ -781,33 +801,33 @@ Some of the key ones are duplicated here; which one make it to the next drop wil
 
 ### Language systems and libraries
 
-* CPU affinity API() are silently ignored
-* Some of the huge ML packages (e.g. TensorFlow) are not tested with Python.km
-* Native binaries (with glibc) are experimental and may have multiple issues - though we do test them in the CI
-* Language runtime base images are only provided for a single version per language. E.g. only python 3.7. No Python 2 or Python 3.8.
+- CPU affinity API() are silently ignored
+- Some of the huge ML packages (e.g. TensorFlow) are not tested with Python.km
+- Native binaries (with glibc) are experimental and may have multiple issues - though we do test them in the CI
+- Language runtime base images are only provided for a single version per language. E.g. only python 3.7. No Python 2 or Python 3.8.
 
 
 ### Kontain Monitor and debugging
 
-* there is no management plane to enumerate all running Kontain VMs
-* floating point status is not retained across snapshots
-* snapshots are per VM - no support for coordinated snapshot for parent + childen yet
-* issues in GDB:
-  * Stack trace through a signal handler is not useful
-  * Handle variables in thread local storage - currently ‘p var’ would generate an error
-  * Floating point registers not supported
-* only a small subset of /proc/self is implemented (the one we saw being used in Node.js, python 3 and jvm 11)
-* getrlimit/setrlimit are not virtualized and are reditrected to the host
+- there is no management plane to enumerate all running Kontain VMs
+- floating point status is not retained across snapshots
+- snapshots are per VM - no support for coordinated snapshot for parent + childen yet
+- issues in GDB:
+  - Stack trace through a signal handler is not useful
+  - Handle variables in thread local storage - currently ‘p var’ would generate an error
+  - Floating point registers not supported
+- only a small subset of /proc/self is implemented (the one we saw being used in Node.js, python 3 and jvm 11)
+- getrlimit/setrlimit are not virtualized and are reditrected to the host
 
  ### Docker and Kubernetes
 
-* Kontaind uses device plugin that has bugs , resulting in (rare) refusal to provide access to /dev/kvm. Workaround: re-deploy kontaid
-* krun runtime is missing 'checkpoint/resume' implementation
-* krun is not used on Kubernetes yet - use regular runtimes there
+- Kontaind uses device plugin that has bugs , resulting in (rare) refusal to provide access to /dev/kvm. Workaround: re-deploy kontaid
+- krun runtime is missing 'checkpoint/resume' implementation
+- krun is not used on Kubernetes yet - use regular runtimes there
 
 ### Clouds
 
-* See "platform support" earlier in this doc
+- See "platform support" earlier in this doc
 
 ## FAQ
 
@@ -821,13 +841,13 @@ We are working on install process for KKM - it requires building with the exact 
 
 ### How to see Kontain interaction with KVM
 
-* You can use `trace-cmd record` and `trace-cmd report` to observe kvm activity. [For more details on trace-cmd see](https://www.linux-kvm.org/page/Tracing).
+- You can use `trace-cmd record` and `trace-cmd report` to observe kvm activity. [For more details on trace-cmd see](https://www.linux-kvm.org/page/Tracing).
 
 ### Are there any limitations on code running as unikernel
 
-* The code shouldn't use not supported system calls
-* VM monitor will report an error as "Unimplemented hypercall". Payload will abort
-* Apps like Java or Python or Node are good with this requirement
+- The code shouldn't use not supported system calls
+- VM monitor will report an error as "Unimplemented hypercall". Payload will abort
+- Apps like Java or Python or Node are good with this requirement
 
 ## Contributing
 
