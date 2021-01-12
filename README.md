@@ -564,25 +564,31 @@ Reading symbols from target:/home/paulp/ws/ws2/km/tests/hello_test.km...
 ### Debugging payload child processes and exec'ed payloads
 
 When a Kontain payload forks it inherits the debug settings from the forking process.
-If the parent waited for gdb attach before starting up, so will the child.
-If the parent was listening for a gdb client attach in the background, the child will do that also.
-Each forked payload will be listening on a new network port.  The new network port is the next free port that is higher than the parent's gdb network port.
-Of course if most ports are in use port number will wrap at 64*1024.
+
+- If the parent waited for gdb attach before starting up, so will the child.
+- If the parent was listening for a gdb client attach in the background, the child will do that also.
+- Each forked payload will be listening on a new network port.
+  - The new network port is the next free port that is higher than the parent's gdb network port.
+  - If most ports are in use port number will wrap at 64*1024.
 
 gdb's follow-fork-mode currently can't be used to stay with a payload's child after a fork.
 There is a Kontain specific method that is used to allow a payload child process to be debugged.
-Put the variable KM_GDB_CHILD_FORK_WAIT into the parent km's environment.  The value of this variable is a regular expression that is compared to the payload's name.
+
+Put the variable KM_GDB_CHILD_FORK_WAIT into the parent km's environment.
+The value of this variable is a regular expression that is compared to the payload's name.
 If there is a match, the child process will pause waiting for the gdb client to connect to km's gdb server.
 The port to connect to is contained in a message from the child process's km, like this:
 
 ```txt
-17:58:50.400726 km_gdb_fork_reset    310  1001.km      Pid 766965 is listening for debugger attach on port 14016
+19:07:08.481122 km_gdb_attach_messag 319  1001.km      Waiting for a debugger. Connect to it like this:
+        gdb -q --ex="target remote work:2160" /home/paulp/ws/ws2/km/tests/gdb_forker_test.km
+GdbServerStubStarted
 ```
 
 You can attach using this command:
 
 ```bash
-gdb -q --ex="target remote localhost:14016"
+gdb -q --ex="target remote localhost:2160"
 ```
 
 When a payload process exec()'s, the normal gdb "catch exec" command will allow the gdb client to gain control after the exec call completes successfully.
