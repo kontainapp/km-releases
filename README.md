@@ -166,14 +166,14 @@ Edit `/etc/docker/daemon.json` using sudo to run your editor and add the followi
 Then restart docker for the change to take effect:
 
 ```bash
-systemctl reload-or-restart docker.service
+sudo systemctl reload-or-restart docker.service
 ```
 
 Then you run a container using krun as follows:
 
 ```bash
 docker pull kontainapp/runenv-python
-docker run --runtime krun kontainapp/runenv-python -c "import os; print(os.uname())"
+docker run -it --runtime krun kontainapp/runenv-python -c "import os; print(os.uname())"
 ```
 
 You should see output that looks like this:
@@ -181,6 +181,8 @@ You should see output that looks like this:
 ```txt
 posix.uname_result(sysname='kontain-runtime', nodename='ddef05d46147', release='4.1', version='preview', machine='kontain_KVM')
 ```
+
+Warning: When docker is installed on Ubnuntu using `snap`, the location of config file and the name of the service are different. Please consult with snap and docker documentation for correct location and names, or simply remove the snap version and install using apt-get
 
 ### Kubernetes
 
@@ -392,7 +394,7 @@ func main() {
 }
 EOF
 
-go build -o $dir/$file.km $dir/$file.go
+CGO_ENABLED=0 go build -o $dir/$file.km $dir/$file.go
 
 /opt/kontain/bin/km $dir/$file.km
 ```
@@ -400,7 +402,7 @@ go build -o $dir/$file.km $dir/$file.go
 For more optimal unikernel use additional linker options:
 
 ```bash
-go build -ldflags '-T 0x201000 -extldflags "-no-pie -static -Wl,--gc-sections"' -o test.km test.go
+CGO_ENABLED=0 go build -ldflags '-T 0x201000 -extldflags "-no-pie -static -Wl,--gc-sections"' -o test.km test.go
 ```
 
 ### Using with standard executable
