@@ -341,6 +341,9 @@ docker run --rm --runtime=krun kontain-hello
 Regular run time can also be used for "run" commmand (but not for exec):
 `docker run --rm -v /opt/kontain/bin/km:/opt/kontain/bin/km:z --device /dev/kvm kontain-hello`
 
+NOTE: `--device /dev/kkm` on platforms with Kontain KKM module (e.g. AWS)
+
+
 ### Building your own Kontain unikernel
 
 To build a Kontain unikernel, you can do one of the following
@@ -453,7 +456,8 @@ Example:  You can run a interactive python as inside Kontain VM using this:
 
 `docker run --device /dev/kvm -it --rm -v /opt/kontain/bin/km:/opt/kontain/bin/km:z kontainapp/runenv-python-3.7`
 
-**NOTE** Currently you may see debug messages there, and the container size is not optimized yet.
+NOTE: `--device /dev/kkm` on platforms with Kontain KKM module (e.g. AWS)
+NOTE: Currently you may see debug messages there, and the container size is not optimized yet.
 
 ### Using snapshots
 
@@ -646,7 +650,7 @@ illustrate how `faktory` works.
 Download the kontain JDK 11 image:
 
 ```bash
-docker pull kontainapp/runenv-jdk-11:latest
+docker pull kontainapp/runenv-java-11:latest
 ```
 
 ##### Using faktory to convert an existing java based image
@@ -716,7 +720,7 @@ environment is not affected by kontain.
 #### Run
 
 To run a kontain based container image, the container will need access to
-`/dev/kvm` and kontain monitor `km`, so make sure the host has these
+`/dev/kvm` (or `/dev/kkm` on AWS) and kontain monitor `km`, so make sure the host has these
 available. For Java we also require kontain's version of `libc.so`. E.g.
 
 ```bash
@@ -727,6 +731,7 @@ docker run -it --rm \
     example/kontain-java
 ```
 
+NOTE: `--device /dev/kkm` on platforms with Kontain KKM module (e.g. AWS)
 Note: we are working on OCI Runtime that will automate the above. This document will be updated once it's available
 
 ## Architecture
