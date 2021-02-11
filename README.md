@@ -664,7 +664,7 @@ based image named `example/kontain-java:latest`:
 sudo faktory convert \
     example/existing-java:latest \
     example/kontain-java:latest \
-    kontainapp/runenv-jdk-11:latest \
+    kontainapp/runenv-java-11:latest \
     --type java
 ```
 
@@ -674,7 +674,7 @@ To use kontain java runtime environment with dockerfile, user can substitute
 the base image with kontain image.
 
 ```dockerfile
-FROM kontainapp/runenv-jdk-11
+FROM kontainapp/runenv-java-11
 
 # rest of dockerfile remain the same ...
 ```
