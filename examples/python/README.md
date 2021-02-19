@@ -7,7 +7,7 @@ The KM example takes a snapshot after the model has been loaded. Since the snaps
 In order to create a baseline, `snapshot.py` is first run with the system python interpreter.
 
 ```sh
-$ time python snapshot.py 
+$ time python snapshot.py
 Hello world
 
 real 0m3.027s
@@ -18,7 +18,7 @@ sys 0m0.007s
 The second case runs the same program under KM. Since the `live=True` parameter is passed to `kontain.snapshots.take()`, the function is called. This allows comparison with the base case.
 
 ```sh
-$ time ~/kontain/km/payloads/python/cpython/python snapshot.py 
+$ time ~/kontain/km/payloads/python/cpython/python snapshot.py
 Hello world
 
 real 0m3.041s
@@ -31,13 +31,13 @@ The extra 20ms is the time it takes to create the snapshot.
 The final case shows the snapshot restarted showing the function called with the model preloaded.
 
 ```sh
-$ time ~/kontain/km/build/km/km --resume kmsnap
+$ time ~/kontain/km/build/km/km kmsnap
 Hello world
 
 real 0m0.013s
 user 0m0.002s
 sys 0m0.010s
-$ 
+$
 ```
 
 Since the on-disk snapshot contains the pre-loaded model, there is no need to have logic that keeps a function 'warm'.
