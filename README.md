@@ -8,11 +8,7 @@ Kontain seamlessly plugs into Docker or Kubernetes run time environments.
 
 Kontain release includes Kontain Monitor, runtime libraries, tools and pre-build unikernel payloads, e.g. Python-3.7.
 
-## Status
-
-**Version:** 0.10-beta
-
-The packaging and docs are work in progress and may change without notice.
+**Version:** 0.1-beta2
 
 ## Table of Contents
 
@@ -36,29 +32,33 @@ The packaging and docs are work in progress and may change without notice.
 - `On GCP`, do not use default Linux VM. Default (as of 11/2020) provisioning of a linux VM uses Debian 9 distribution, which is based on 4.09 Kernel. Please choose other distributions with fresher kernel, e.g. Ubuntu 20 LTS.
 - `Earlier Linux distributions` (e.g. Ubuntu 18 LTS) are not fully supported, mainly due to limited testing. If you need one of these please try first, and if there are issues please submit an issue for this repository.
 
-## Install
+## Install: use a pre-configured VM with all components pre-installed
+
+The easiest way to get started with Kontain is to use a pre-configured VM with all components (including Kontain Kernel Module) installed.
+Kontain provides a Vagrant Box with Ubuntu 20.10 and Kontain pre-installed.
+
+Assuming you have [vagrant](https://www.vagrantup.com/) and [virtualbox](https://www.virtualbox.org/) installed (e.g. on Mac, `brew install vagrant virtualbox`), you can simply run `kontain/beta2-kkm` box from *vagrantcloud*:
+
+```sh
+mkdir try-kontain; cd try-kontain
+vagrant init kontain/beta2-kkm
+vagrant up --provider=virtualbox
+vagrant ssh
+```
+
+Currently *kontain/beta2-kkm* box is provided for *virtualbox* provider only. Please submit an issue if you'd like to have a different provider.
+
+Kontain also provide AWS AMI with Kontain pre-installed; it is documented further in this box
+
+## Install: install pre-requisites and components manually
 
 ### Check Pre-requisites
 
 If you want to give it a try on OSX or Windows, please create a Linux VM with nested
-vitualization (/dev/kvm) available - e.g. VMWare Fusion on Mac supports it out of the box.
+virtualization (/dev/kvm) available - e.g. VMWare Fusion on Mac supports it out of the box.
 
 - To check Linux kernel version, use `uname -a`.
 - To check that KVM is and kvm module is loaded use `lsmod | grep kvm` ; also validate that */dev/kvm* exists and has read/write permissions `ls -l /dev/kvm`.
-
-#### Trying on a dedicated Ubuntu VM
-
-One of the easiest ways to create an Ubuntu VM so you can try Kontain is to use Canonical's `multipass` tool.
-See https://multipass.run for details.
-For example, on Fedora this sequence install multipass, loads and runs Ubuntu 20 with nested KVM, and connects to it:
-
-```sh
-sudo dnf install multipass
-multipass launch -n myvm
-multipass shell myvm
-```
-
-While multipass is available on Linux, OSX and Windows hosts, we still recommend Linux host. On mac by default (withg hyperkit virtualiztion) there is no nested virtualization which Kontain requires. We did not test it on Windows yet
 
 #### Docker and gcc
 
@@ -79,12 +79,13 @@ sudo mkdir -p /opt/kontain ; sudo chown -R $(whoami) /opt/kontain
 wget https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh -O - -q | bash
 ```
 
-To install a non-default release, e.g. `v0.1-test`:
+The above will "default" install release, i.e. the one mentioned in [./default-release](https://github.com/kontainapp/km-releases/blob/master/default-release).
+To install a non-default release, e.g. `v0.1-beta1`, pass the release tag to *kontain-install.sh*:
 
 ```bash
 sudo mkdir -p /opt/kontain ; sudo chown -R $(whoami) /opt/kontain
 wget https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh -q
-chmod a+x ./kontain-install.sh; ./kontain-install.sh v0.1-test
+chmod a+x ./kontain-install.sh; ./kontain-install.sh v0.1-beta1
 ```
 
 #### Run script from git repo
@@ -98,14 +99,16 @@ git clone https://github.com/kontainapp/km-releases
 ```
 
 Either way, the script will try to un-tar the content into /opt/kontain. If you don't have enough access, the script will advice on the next step.
+
 ### Install for Docker
 
 You can run Kontain payload wrapped in a native Docker container.... in this case, all Docker overhead is still going to be around, but you will have VM / unikernel without extra overhead.
 Install docker engine (https://docs.docker.com/engine/install/) or moby-engine (`sudo dnf install docker` on Fedora does this. `podman` is also supported.
 
-#### Warning: cgroups version mismatch between Docker and Fedora Linux
+#### Warning: cgroups version mismatch between Docker and Fedora Linux 32+
 
-As if 10/2020 there was glitch between latest docker and latest fedora 32 configuration. While it is not related to Kontain, it  may impact `docker run` commands if you have a fresh docker installation.
+As if 10/2020 there was glitch between latest docker and latest fedora 32 configuration. While it is not related to Kontain, it  may impact `docker run` commands for fresh docker installations.
+
 Here is a good summary of reasons, and instruction for fixes: https://fedoramagazine.org/docker-and-fedora-32/
 
 - Symptom: **docker: Error response from daemon: OCI runtime create failed: this version of runc doesn't work on cgroups v2: unknown** error message for `docker run'.
@@ -225,7 +228,7 @@ NAME               DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SEL
 kontaind           1         1         1       1            1           <none>          84d
 ```
 
-## Background
+## Kontain technology - an outline.
 
 Kontain provides a mechanism to create a unikernel from an unmodified application code, and execute the unikernel in a dedicated VM.
 Kontain provides VM level isolation guarantees for security with very low overhead compared to regular linux processes.
@@ -269,11 +272,112 @@ To make it easier to try Kontain on AWS, Kontain provides a pre-built AMI to exp
 
 Kontain manipulates VMs and needs access to either `/dev/kvm` device, or `/dev/kkm` device, depending on the kernel module used.
 
-## Usage
+## Getting Started
 
-The following content is just examples, and should be seen as more of a 'getting started' guide than a full usage list.
+For interpreted languages, Kontain provides a pre-created unikernels (packaged as Docker images). No changes to source code was made to build those.
 
-### Create and run your first unikernel
+For compiled languages (C/C++/GO/etc...) existing object files have to be linked into a unikernel. Kontain provides a convenience wrappers (kontain-gcc and kontain-g++) for C/C++. For GOLANG Kontain will handle GO executables as unikernels. For other languages, regular linux 'ld' should be used to link a unikernel and currently out of scope for this doc - though you can check kontain-gcc script for a usage example
+
+### Using examples
+
+`/opt/kontain/examples` directory has examples in Java, Javascript (node.js), python, C and GOLANG.
+
+For interpreted languages (jav/javascript/python) you can either run a docker container, or extract files from there and run them directly on the host.
+
+#### Python
+
+Check what os.uname() reports:
+
+```sh
+docker run --runtime krun --rm  kontainapp/runenv-python -c 'import os; print(os.uname())'
+```
+
+Run a small service listening to http:
+
+```sh
+docker run --runtime krun --rm -p 8080:8080 -v /opt/kontain/examples/python/:/scripts \
+   kontainapp/runenv-python  /scripts/micro_srv.py
+```
+
+And you can access it with `curl localhost:8080`. Note that the python interpreter is running as a unikernel in Kontain VM, while all user experience is vanilla Docker.
+
+##### Running locally, without Docker
+
+Files in `kontainapp/runenv-python` docker images (and Kontain Monitor installed) is all that's needed to run python in Kontain locally, without docker:
+
+```sh
+mkdir try-python
+cd try-python
+docker create --name kpython kontainapp/runenv-python
+docker export kpython | tar xvf -
+docker rm kpython
+#
+# And now you can run python in Kontain locally:
+./usr/local/bin/python -c 'import os; print(os.uname())'
+# get back when done
+cd ..
+```
+
+Note that `./usr/local/bin/python` is really a symlink to /opt/kontain/bin/km. KM (Kontain Monitor) will find the actual unikernel to run by adding `.km` to it's own name, so the actual binary running in Kontain VM will be python unikernel from `./usr/local/bin/python.km`
+
+#### Node.js (javascript)
+
+Similarly, you can run a small http server from node/examples:
+
+```sh
+docker run --runtime krun -it --rm -p 8080:8080 -v /opt/kontain/examples/:/scripts \
+   kontainapp/runenv-node  /scripts/micro_srv.js
+```
+
+and then access it with `curl localhost:8080`.
+
+Or, to run locally:
+
+```sh
+mkdir try-node
+cd try-node
+docker create --name knode kontainapp/runenv-node
+docker export knode | tar xvf -
+docker rm knode
+#
+# And now you can run node in Kontain locally:
+./node /opt/kontain/examples/node/micro_srv.js
+# get back when done
+cd ..
+```
+
+#### Java
+
+To run a simple Hello World example:
+
+```sh
+docker run --rm --runtime krun \
+   -v /opt/kontain/examples/:/scripts --env CLASSPATH=/scripts/java \
+   kontainapp/runenv-java-11 Hello
+```
+
+And to run locally:
+
+```sh
+mkdir try-java
+cd try-java
+docker create kontainapp/runenv-java-11
+docker export kjava | tar xvf -
+#Java needs multiple shared libs, so the command to run it locally is a bit more complex
+JL=`pwd`/opt/kontain/java/lib \
+   /opt/kontain/bin/km \
+   --putenv=CLASSPATH=/opt/kontain/examples/java/ \
+   --putenv=LD_LIBRARY_PATH=$JL/server:$JL/jli:$JL:/opt/kontain/runtime/:`pwd`/lib64 \
+   ./opt/kontain/java/bin/java.kmd Hello
+# get back when done
+cd ..
+```
+
+#### C/C++/GO
+
+C and GOLANG the examples are in the sections below.
+
+### Create and run your first unikernel from a C program
 
 Create playground directory and example program:
 
@@ -343,8 +447,7 @@ Regular run time can also be used for "run" commmand (but not for exec):
 
 NOTE: `--device /dev/kkm` on platforms with Kontain KKM module (e.g. AWS)
 
-
-### Building your own Kontain unikernel
+### Building your own Kontain unikernel - general steps
 
 To build a Kontain unikernel, you can do one of the following
 
@@ -438,11 +541,10 @@ version         = preview
 machine         = kontain_VM
 ```
 
-### _What about the static .km files?_
+#### Using pre-built unikernels for interpreted languages
 
-#### Using pre-build unikernels for interpreted languages
-
-Kontain supports a set of pre-built language systems, as containers you can use in FROM dockerfiles statement, or passing scripts dirs as volumes.
+Python/Node/Java example above use pre-built unikernels.
+You can use them in your own containers, by addint to *FROM* dockerfiles statement, or by passing scripts directories as volumes.
 
 The images are available on dockerhub as `kontainapp/runenv-<language>-version` e.g. `kontainapp/runenv-python-3.7`. Kontain provides the following pre-built languages:
 
@@ -450,11 +552,15 @@ The images are available on dockerhub as `kontainapp/runenv-<language>-version` 
 - node-12.4 (js)
 - python-3.7
 
-We will extend the list by the release time. Also - see the section below on linking your own, if needed
+Kontain also provides aliases: java-11, jdk-11, node and python, so you can use `kontainapp/runenv-node` without versioning .
 
-Example:  You can run a interactive python as inside Kontain VM using this:
+We will extend the list by the release time. Also - see the section below on linking your own unikernel for a different version or different language if needed
 
-`docker run --device /dev/kvm -it --rm -v /opt/kontain/bin/km:/opt/kontain/bin/km:z kontainapp/runenv-python-3.7`
+Example:  You can run a interactive Python under Kontain using this: `docker run --runtime krun -it --rm kontainapp/runenv-python`
+
+Or, without Kontain runtime:  `docker run --device /dev/kvm -it --rm -v /opt/kontain/bin/km:/opt/kontain/bin/km:z kontainapp/runenv-python-3.7`
+
+Important: with Kontain runtime `krun`, all subprocesses (if any) and `docker exec` will be automatically wrapped in dedicated Kontain VMs (one per process). When running vanilla docker (with `--device` and `-v` flags), docker exec and and subprocesses will circumvent Kontain encapsulation.
 
 NOTE: `--device /dev/kkm` on platforms with Kontain KKM module (e.g. AWS)
 NOTE: Currently you may see debug messages there, and the container size is not optimized yet.
@@ -601,23 +707,41 @@ When a payload process exec()'s, the normal gdb "catch exec" command will allow 
 
 ### Visual Studio Code
 
-VS code supports GUI debugging via GDB. `launch.json` needs to have configuration for Kontain payload debugging.... here is an example:
+VS code supports GUI debugging via GDB. `launch.json` needs to have configuration for Kontain payload debugging.... here is an example of configuratoin for debugging of `test.km` in the current directory:
 
 ```json
+{
+   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+   "version": "0.2.0",
+   "configurations": [
       {
-         "name": "Debugging of a Kontain unikernel exec_test.km",
+         "name": "test.km",
          "type": "cppdbg",
          "request": "launch",
-         "program": "/opt/kontain/bin/km",
+         "cwd": "${workspaceFolder}",
+         "program": "${workspaceFolder}/test.km",
          "args": [
-            "exec_test.km",
-            "-f"
+            "set debug remote 0"
          ],
          "stopAtEntry": true,
-         "cwd": "${workspaceFolder}/your_dir",
+         "miDebuggerServerAddress": "localhost:2159",
+         "miDebuggerArgs": "--silent",
+         "debugServerPath": "/opt/kontain/bin/km",
+         "debugServerArgs": "-g ${workspaceFolder}/test.km",
+         "serverLaunchTimeout": 5000,
+         "filterStderr": true,
+         "filterStdout": true,
+         "serverStarted": "GdbServerStubStarted",
+         "logging": {
+            "moduleLoad": false,
+            "trace": false,
+            "engineLogging": false,
+            "programOutput": true,
+            "exceptions": false,
+            "traceResponse": false
+         },
          "environment": [],
          "externalConsole": false,
-         "MIMode": "gdb",
          "setupCommands": [
             {
                "description": "Enable pretty-printing for gdb",
@@ -626,6 +750,7 @@ VS code supports GUI debugging via GDB. `launch.json` needs to have configuratio
             }
          ]
       },
+   ]
 ```
 
 See VS Code launch.json docs for more info
@@ -636,6 +761,7 @@ Faktory converts a docker container to kontain kontainer. For reference,
 `container` will refer to docker container and `kontainer` with a `k` will
 refer to kontain kontainer.
 
+Faktory is an experimental proof of concept.
 #### Install Faktory
 
 faktory is pre-installed in /opt/kontain/bin/faktory
@@ -668,7 +794,7 @@ sudo faktory convert \
     --type java
 ```
 
-#### Use kontain Java in dockerfiles
+### Use kontain Java in dockerfiles
 
 To use kontain java runtime environment with dockerfile, user can substitute
 the base image with kontain image.
@@ -719,9 +845,15 @@ environment is not affected by kontain.
 
 #### Run
 
-To run a kontain based container image, the container will need access to
-`/dev/kvm` (or `/dev/kkm` on AWS) and kontain monitor `km`, so make sure the host has these
-available. For Java we also require kontain's version of `libc.so`. E.g.
+To run a kontain based container image, use `--runtime krun` flag.
+Krun will seamlessly provide access to virtualization device and neccessary pre-installed libraries:
+
+```sh
+docker run -it --rm --runtime krun example/kontain-java
+```
+
+For testing, the same command can be run without `--runtime krun` flag by passing needed info to Docker; however in this case `docker exec` and subprocesses (if any) will be executed outsided of Kontain. it should never be used this way in production.
+E.g.
 
 ```bash
 docker run -it --rm \
@@ -732,7 +864,6 @@ docker run -it --rm \
 ```
 
 NOTE: `--device /dev/kkm` on platforms with Kontain KKM module (e.g. AWS)
-Note: we are working on OCI Runtime that will automate the above. This document will be updated once it's available
 
 ## Architecture
 
@@ -761,13 +892,13 @@ TODO - KKM architecture whitepaper is in editorial review
 
 Meanwhile, we provide an AWS image (Ubuntu 20 with pre-installed and pre-loaded KKM) which can be used to experiment / test Kontain on AWS.
 
-AMI is placed in N. California (us-west-1) region. AMI ID is `ami-047e551d80c79dbb7`.
+AMI is placed in N. California (us-west-1) region. AMI ID is `ami-0777c52f229ff2cad` , name `Kontain_ubuntu_20.04-beta1`.
 
 To create a VM:
 
 ```sh
 aws ec2 create-key-pair --key-name aws-kkm --region us-west-1
-aws ec2 run-instances --image-id ami-047e551d80c79dbb7 --count 1 --instance-type t2.micro --region us-west-1 --key-name aws-kkm
+aws ec2 run-instances --image-id ami-0777c52f229ff2cad --count 1 --instance-type t2.micro --region us-west-1 --key-name aws-kkm
 # before next step save the key to ~/.ssh/aws-kkm.pem and chown it to 400
 ```
 
