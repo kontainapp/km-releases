@@ -80,12 +80,12 @@ wget https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-ins
 ```
 
 The above will "default" install release, i.e. the one mentioned in [./default-release](https://github.com/kontainapp/km-releases/blob/master/default-release).
-To install a non-default release, e.g. `v0.1-beta1`, pass the release tag to *kontain-install.sh*:
+To install a non-default release, e.g. `v0.1-beta2-demo`, pass the release tag to *kontain-install.sh*:
 
 ```bash
 sudo mkdir -p /opt/kontain ; sudo chown -R $(whoami) /opt/kontain
 wget https://raw.githubusercontent.com/kontainapp/km-releases/master/kontain-install.sh -q
-chmod a+x ./kontain-install.sh; ./kontain-install.sh v0.1-beta1
+chmod a+x ./kontain-install.sh; ./kontain-install.sh v0.1-beta2-demo
 ```
 
 #### Run script from git repo
