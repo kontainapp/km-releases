@@ -892,13 +892,19 @@ TODO - KKM architecture whitepaper is in editorial review
 
 Meanwhile, we provide an AWS image (Ubuntu 20 with pre-installed and pre-loaded KKM) which can be used to experiment / test Kontain on AWS.
 
-AMI is placed in N. California (us-west-1) region. AMI ID is `ami-0777c52f229ff2cad` , name `Kontain_ubuntu_20.04-beta1`.
-
-To create a VM:
+Public AMI is placed in N. California (us-west-1) region. AMI name `Kontain_ubuntu_20.04` and owner is `782340374253`
+To get ID using command line:
 
 ```sh
+aws ec2 describe-images --owners 782340374253  --filters "Name=name,Values=Kontain_ubuntu_20.04" --query 'sort_by(Images, &CreationDate)[-1].[ImageId]'  --output text
+```
+
+As of 3/3/21 AMI image id is `ami-08631510bd83083bf` (it may change as we update the AMI), so to create a VM:
+
+```sh
+image_id=$(aws ec2 describe-images --owners 782340374253  --filters "Name=name,Values=Kontain_ubuntu_20.04" --query 'sort_by(Images, &CreationDate)[-1].[ImageId]'  --output text)
 aws ec2 create-key-pair --key-name aws-kkm --region us-west-1
-aws ec2 run-instances --image-id ami-0777c52f229ff2cad --count 1 --instance-type t2.micro --region us-west-1 --key-name aws-kkm
+aws ec2 run-instances --image-id $image_id --count 1 --instance-type t2.micro --region us-west-1 --key-name aws-kkm
 # before next step save the key to ~/.ssh/aws-kkm.pem and chown it to 400
 ```
 
