@@ -46,7 +46,7 @@ function install_packages {
         sudo apt-get update
         sudo apt-get install -y libyajl2 libseccomp2 libcap2
     elif [ "$NAME" == "Fedora" ] ; then
-        sudo dnf install yajl-devel.x86_64 libseccomp.x86_64 libcap.x86_64
+        sudo dnf install -y yajl-devel.x86_64 libseccomp.x86_64 libcap.x86_64
     else
         echo "Unsupported linux: $NAME, packages libyajl, libseccomp, libcap may need to be installed for krun to work"
     fi
