@@ -326,7 +326,7 @@ Similarly, you can run a small http server from node/examples:
 
 ```sh
 docker run --runtime krun -it --rm -p 8080:8080 -v /opt/kontain/examples/:/scripts \
-   kontainapp/runenv-node  /scripts/micro_srv.js
+   kontainapp/runenv-node  node /scripts/micro_srv.js
 ```
 
 and then access it with `curl localhost:8080`.
